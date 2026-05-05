@@ -128,7 +128,6 @@
 
 /* Premium card: stronger glass, soft purple/blue glow border */
 .glass-card-premium {
-  position: relative;
   background:
     radial-gradient(120% 80% at 0% 0%, rgba(139, 92, 246, 0.10) 0%, rgba(139, 92, 246, 0) 60%),
     radial-gradient(120% 80% at 100% 100%, rgba(59, 130, 246, 0.10) 0%, rgba(59, 130, 246, 0) 60%),
@@ -162,7 +161,8 @@
   animation: aurora-rotate 18s linear infinite;
   z-index: 0;
 }
-.card-aurora > * { position: relative; z-index: 1; }
+.card-aurora > * { z-index: 1; }
+.card-aurora > *:not(.absolute) { position: relative; }
 
 @keyframes aurora-rotate {
   to { transform: rotate(360deg); }

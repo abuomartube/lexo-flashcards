@@ -88,9 +88,25 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
           accent.border,
         )}>
           <span className={cn("absolute top-6 right-6 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md backdrop-blur-sm", accent.chip)}>{level}</span>
-          <Badge variant="secondary" className="absolute top-6 left-6 text-xs uppercase tracking-wider bg-white/5 border border-white/10 backdrop-blur-sm">{pos}</Badge>
-          <h2 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 text-foreground text-cinematic">{word}</h2>
-          <div className="mb-6 flex items-center gap-2">
+
+          <span className="mb-3 sm:mb-4 inline-flex items-center text-[10px] sm:text-xs uppercase tracking-[0.18em] font-semibold text-white/85 px-2.5 py-1 rounded-full bg-white/[0.06] backdrop-blur-sm border border-white/10 shadow-[0_0_18px_-4px_rgba(139,92,246,0.45)]">
+            {pos}
+          </span>
+
+          <h2
+            className={cn(
+              "font-bold tracking-tight mb-5 sm:mb-6 text-foreground text-cinematic break-words max-w-[90%] leading-tight",
+              word.length > 14
+                ? "text-3xl sm:text-5xl"
+                : word.length > 9
+                  ? "text-4xl sm:text-6xl"
+                  : "text-5xl sm:text-7xl",
+            )}
+          >
+            {word}
+          </h2>
+
+          <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">EN</span>
             {card?.audioWordUrl ? (
               <AudioButton url={card.audioWordUrl} size="default" />
@@ -98,7 +114,8 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
               <AudioButton url="" size="default" />
             )}
           </div>
-          <div className="text-muted-foreground text-xs sm:text-sm opacity-50 group-hover:opacity-90 transition-opacity absolute bottom-6 tracking-wide">
+
+          <div className="text-muted-foreground text-[10px] sm:text-xs opacity-50 group-hover:opacity-90 transition-opacity absolute bottom-3 sm:bottom-4 tracking-wide">
             Press Space or Tap to flip
           </div>
         </div>

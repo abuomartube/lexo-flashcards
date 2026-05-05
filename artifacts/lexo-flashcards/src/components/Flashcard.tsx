@@ -5,17 +5,50 @@ import { AudioButton } from "./AudioButton";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 interface FlashcardProps {
   id: number;
   word: string;
   pos: string;
+  level: string;
   isFlipped: boolean;
   onFlip: () => void;
   nextCardId?: number;
 }
 
-export function Flashcard({ id, word, pos, isFlipped, onFlip, nextCardId }: FlashcardProps) {
+const LEVEL_ACCENT: Record<
+  string,
+  { border: string; badge: string; arabic: string; chip: string }
+> = {
+  A1: {
+    border: "hover:border-emerald-400/40",
+    badge: "bg-emerald-500/15 text-emerald-300 border border-emerald-400/20",
+    arabic: "text-emerald-300",
+    chip: "bg-emerald-500/15 text-emerald-300",
+  },
+  A2: {
+    border: "hover:border-sky-400/40",
+    badge: "bg-sky-500/15 text-sky-300 border border-sky-400/20",
+    arabic: "text-sky-300",
+    chip: "bg-sky-500/15 text-sky-300",
+  },
+  B1: {
+    border: "hover:border-amber-400/40",
+    badge: "bg-amber-500/15 text-amber-300 border border-amber-400/20",
+    arabic: "text-amber-300",
+    chip: "bg-amber-500/15 text-amber-300",
+  },
+  B2: {
+    border: "hover:border-rose-400/40",
+    badge: "bg-rose-500/15 text-rose-300 border border-rose-400/20",
+    arabic: "text-rose-300",
+    chip: "bg-rose-500/15 text-rose-300",
+  },
+};
+
+export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId }: FlashcardProps) {
+  const accent = LEVEL_ACCENT[level] ?? LEVEL_ACCENT.A1;
   const queryClient = useQueryClient();
   
   // Fetch the full card eagerly so the front-side audio button is available
@@ -45,7 +78,11 @@ export function Flashcard({ id, word, pos, isFlipped, onFlip, nextCardId }: Flas
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
       >
         {/* Front */}
-        <div className="absolute inset-0 backface-hidden glass-card rounded-2xl flex flex-col items-center justify-center p-8 text-center group border border-white/5 hover:border-primary/30 transition-colors">
+        <div className={cn(
+          "absolute inset-0 backface-hidden glass-card rounded-2xl flex flex-col items-center justify-center p-8 text-center group border border-white/5 transition-colors",
+          accent.border,
+        )}>
+          <span className={cn("absolute top-6 right-6 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md", accent.chip)}>{level}</span>
           <Badge variant="secondary" className="absolute top-6 left-6 text-xs uppercase tracking-wider bg-white/5">{pos}</Badge>
           <h2 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 text-foreground">{word}</h2>
           <div className="mb-6">
@@ -61,8 +98,11 @@ export function Flashcard({ id, word, pos, isFlipped, onFlip, nextCardId }: Flas
         </div>
 
         {/* Back */}
-        <div 
-          className="absolute inset-0 backface-hidden glass-card rounded-2xl flex flex-col p-6 sm:p-10 border border-white/5"
+        <div
+          className={cn(
+            "absolute inset-0 backface-hidden glass-card rounded-2xl flex flex-col p-6 sm:p-10 border border-white/5 transition-colors",
+            accent.border,
+          )}
           style={{ transform: "rotateY(180deg)" }}
         >
           {isLoading && !card ? (
@@ -89,7 +129,7 @@ export function Flashcard({ id, word, pos, isFlipped, onFlip, nextCardId }: Flas
                   <Badge variant="secondary" className="w-fit text-xs bg-white/5">{card.pos}</Badge>
                 </div>
                 <div className="text-right">
-                  <h3 className="text-3xl sm:text-4xl font-arabic font-bold text-primary" dir="rtl">{card.arabic}</h3>
+                  <h3 className={cn("text-3xl sm:text-4xl font-arabic font-bold", accent.arabic)} dir="rtl">{card.arabic}</h3>
                 </div>
               </div>
 

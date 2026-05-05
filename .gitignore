@@ -1,17 +1,40 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# compiled output
+# ---- Dependencies ----
+node_modules
+.pnpm-store
+
+# ---- Build output ----
 dist
-tmp
+build
+out
 out-tsc
+tmp
+.turbo
+.next
+.vite
 *.tsbuildinfo
 .expo
 .expo-shared
 
-# dependencies
-node_modules
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+testem.log
+/coverage
+/libpeerconnection.log
 
-# IDEs and editors
+# ---- Secrets / env ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+# ---- IDEs and editors ----
 /.idea
 .project
 .classpath
@@ -19,31 +42,23 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
-
-# IDE - VSCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
-.DS_Store
-Thumbs.db
-
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
+# ---- System files ----
+.DS_Store
+Thumbs.db
+/.sass-cache
+/connect.lock
+/typings
+
+# ---- Replit (workspace state, agent caches) ----
 .cache/
 .local/
+.agents/
+.replit-artifact/

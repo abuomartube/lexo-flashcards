@@ -1,0 +1,98 @@
+Build a premium animation system for Lexo Flashcards.
+
+Important:
+- Do NOT change vocabulary data.
+- Do NOT break levels, word families, audio, progress, or buttons.
+- Keep all current buttons working.
+- Add animations only to improve UX.
+
+Required animations:
+
+1. Premium Swipe Animation
+Mobile gestures:
+- Swipe right = next card
+- Swipe left = previous card
+
+Animation:
+- Card follows finger while dragging
+- Slight rotation based on drag distance
+- Right swipe shows green glow
+- Left swipe shows amber/purple glow
+- If swipe passes threshold:
+  - card slides out smoothly
+  - fades out
+  - next/previous card enters from opposite side
+- If swipe is too short:
+  - card snaps back smoothly
+
+2. 3D Flip Animation
+- Tap card or press Space to flip
+- Smooth 3D rotateY animation
+- Front/back sides must not overlap
+- Add soft glow during flip
+
+3. Word Entrance Animation
+When new word appears:
+- fade in
+- slight upward motion
+- soft text glow pulse
+
+4. Button Micro-interactions
+For all major buttons:
+- hover lift
+- tap scale down
+- soft glow on active
+- disabled state clean
+
+5. Level Chip Animation
+- active level chip glows
+- smooth transition between levels
+- locked levels shake slightly when tapped
+
+6. Success / Learning Feedback
+When user clicks “I know it”:
+- green pulse
+- small +XP floating animation
+- short success glow
+
+When user clicks “A new word”:
+- amber pulse
+- small “Added to review” toast
+
+7. Challenge Mode Animation
+When entering Challenge Mode:
+- word dissolves/fades out
+- blanks fade in
+- hints slide in softly
+
+When showing word again:
+- blanks fade out
+- word fades in with glow
+
+8. Modal Animation
+For Word Families:
+- open with fade + scale
+- close smoothly
+- mobile bottom sheet slides up/down
+- background blur transition
+
+9. Progress Animation
+- progress bar fills smoothly
+- percentage/count changes with animated number transition
+
+10. Performance Rules
+- Use CSS transitions and transforms where possible
+- Avoid heavy animations
+- Respect prefers-reduced-motion
+- Keep mobile performance smooth
+
+Visual style:
+- Dark premium SaaS
+- Purple/blue neon accents
+- Glassmorphism
+- Smooth, elegant, not childish
+
+Implementation:
+- Create reusable animation classes/utilities if needed.
+- Apply to the flashcards page only.
+- Test on mobile and desktop.

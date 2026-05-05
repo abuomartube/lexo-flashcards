@@ -290,6 +290,7 @@ export function Flashcard({
               transition={{ duration: 0.35, ease: "easeOut" }}
               className={cn(
                 "font-bold tracking-tight mb-4 sm:mb-5 text-foreground text-cinematic break-words max-w-[90%] leading-tight",
+                mode === "learning" && "word-glow-pulse",
                 mode === "challenge"
                   ? "font-mono tracking-[0.35em] text-4xl sm:text-6xl text-white/85"
                   : word.length > 14

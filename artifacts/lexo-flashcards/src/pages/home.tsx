@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+  useReducedMotion,
+} from "framer-motion";
 import { Search, GraduationCap, Brain } from "lucide-react";
 import { useListLevels, useListWords } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/Flashcard";
@@ -104,17 +110,37 @@ export default function Home() {
   const currentWord = displayWords[currentIndex];
   const nextWord = displayWords[currentIndex + 1];
 
+  // Direction the next/prev navigation is heading (1 = forward, -1 = backward).
+  // Drives card enter/exit animations so a swipe-right card flies right
+  // and the next card glides in from the left.
+  const [direction, setDirection] = useState<1 | -1>(1);
+
+  // Brief shake feedback when a nav button is tapped at a boundary
+  // (closest analogue to "locked levels shake slightly when tapped").
+  const [navShake, setNavShake] = useState<"prev" | "next" | null>(null);
+  useEffect(() => {
+    if (!navShake) return;
+    const t = setTimeout(() => setNavShake(null), 450);
+    return () => clearTimeout(t);
+  }, [navShake]);
+
   const handleNext = useCallback(() => {
     if (displayWords && currentIndex < displayWords.length - 1) {
+      setDirection(1);
       setIsFlipped(false);
-      setTimeout(() => setCurrentIndex(prev => prev + 1), 150);
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      setNavShake("next");
     }
   }, [currentIndex, displayWords]);
 
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
+      setDirection(-1);
       setIsFlipped(false);
-      setTimeout(() => setCurrentIndex(prev => prev - 1), 150);
+      setCurrentIndex((prev) => prev - 1);
+    } else {
+      setNavShake("prev");
     }
   }, [currentIndex]);
 
@@ -203,9 +229,29 @@ export default function Home() {
     const t = setTimeout(() => setFlash(null), 700);
     return () => clearTimeout(t);
   }, [flash]);
+
+  // Floating "+XP" pops over the I-know-it button + small "Added to review"
+  // toast over the new-word button. Each gets a unique key so multiple in
+  // quick succession all animate independently.
+  const [xpPops, setXpPops] = useState<{ id: number; amount: number }[]>([]);
+  const [reviewToasts, setReviewToasts] = useState<{ id: number }[]>([]);
   const handleMarkWithFlash = useCallback(
     (status: StudyStatus) => {
+      const popId = Date.now() + Math.random();
       setFlash(status);
+      if (status === "known") {
+        setXpPops((q) => [...q, { id: popId, amount: 10 }]);
+        setTimeout(
+          () => setXpPops((q) => q.filter((p) => p.id !== popId)),
+          1200,
+        );
+      } else {
+        setReviewToasts((q) => [...q, { id: popId }]);
+        setTimeout(
+          () => setReviewToasts((q) => q.filter((p) => p.id !== popId)),
+          1600,
+        );
+      }
       handleMark(status);
     },
     [handleMark],
@@ -237,6 +283,56 @@ export default function Home() {
     displayWords.length > 0
       ? ((currentIndex + 1) / displayWords.length) * 100
       : 0;
+
+  // ---- Premium swipe state ----
+  // dragX is updated on every drag tick so the direction glow overlays
+  // (green right / amber left) can fade in proportionally with the drag.
+  const prefersReducedMotion = useReducedMotion();
+  const dragX = useMotionValue(0);
+  const cardRotate = useTransform(dragX, [-260, 0, 260], [-10, 0, 10]);
+  const rightGlowOpacity = useTransform(dragX, [0, 60, 200], [0, 0.25, 0.7]);
+  const leftGlowOpacity = useTransform(dragX, [-200, -60, 0], [0.7, 0.25, 0]);
+  // Reset the drag value whenever the active card changes, otherwise the
+  // freshly-mounted card would inherit the previous drag offset visually.
+  useEffect(() => {
+    dragX.set(0);
+  }, [currentIndex, dragX]);
+
+  // When the user prefers reduced motion, collapse the swipe / counter / toast
+  // animations to opacity-only crossfades. Framer Motion's JS-driven springs
+  // are not silenced by the CSS `prefers-reduced-motion` media query, so we
+  // have to branch explicitly here.
+  const cardVariants = prefersReducedMotion
+    ? {
+        enter: { opacity: 0 },
+        center: { opacity: 1, transition: { duration: 0.01 } as const },
+        exit: { opacity: 0, transition: { duration: 0.01 } as const },
+      }
+    : {
+        enter: (dir: 1 | -1) => ({
+          x: dir > 0 ? -340 : 340,
+          opacity: 0,
+          scale: 0.94,
+          rotate: dir > 0 ? -6 : 6,
+        }),
+        center: {
+          x: 0,
+          opacity: 1,
+          scale: 1,
+          rotate: 0,
+          transition: { type: "spring", stiffness: 240, damping: 26 } as const,
+        },
+        exit: (dir: 1 | -1) => ({
+          x: dir > 0 ? 340 : -340,
+          opacity: 0,
+          scale: 0.94,
+          rotate: dir > 0 ? 8 : -8,
+          transition: { duration: 0.24, ease: "easeOut" } as const,
+        }),
+      };
+
+  // Animate the visible "x / N" counter when the index changes.
+  const counterText = `${currentIndex + 1} / ${displayWords.length}`;
 
   return (
     <div className="app-bg min-h-[100dvh] w-full">
@@ -473,44 +569,73 @@ export default function Home() {
             </div>
           </div>
         ) : currentWord ? (
-          <motion.div
+          <div
             className={cn(
-              "w-full max-w-2xl rounded-2xl transition-shadow touch-pan-y select-none",
+              "relative w-full max-w-2xl rounded-2xl",
               flash === "known" && "flash-success",
               flash === "learning" && "flash-warn",
             )}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.35}
-            dragMomentum={false}
-            onDragEnd={(_, info) => {
-              const SWIPE_THRESHOLD = 80;
-              const SWIPE_VELOCITY = 400;
-              const dx = info.offset.x;
-              const vx = info.velocity.x;
-              if (dx > SWIPE_THRESHOLD || vx > SWIPE_VELOCITY) {
-                handleNext();
-              } else if (dx < -SWIPE_THRESHOLD || vx < -SWIPE_VELOCITY) {
-                handlePrev();
-              }
-            }}
-            whileDrag={{ scale: 0.98 }}
           >
-            <Flashcard
-              key={currentWord.id}
-              id={currentWord.id}
-              word={currentWord.english}
-              pos={currentWord.pos}
-              level={currentWord.level}
-              isFlipped={isFlipped}
-              onFlip={handleFlip}
-              nextCardId={nextWord?.id}
-              mode={studyMode}
-              onReveal={handleRevealWord}
-              onChallenge={handleChallengeMe}
-              difficulty={getDifficulty(currentWord.id)}
+            {/* Direction-aware swipe glow overlays — fade in proportionally with drag. */}
+            <motion.div
+              aria-hidden
+              style={{ opacity: rightGlowOpacity }}
+              className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-emerald-400/60 shadow-[0_0_60px_0_rgba(16,185,129,0.55)]"
             />
-          </motion.div>
+            <motion.div
+              aria-hidden
+              style={{ opacity: leftGlowOpacity }}
+              className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-amber-400/60 shadow-[0_0_60px_0_rgba(245,158,11,0.55)]"
+            />
+
+            <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+              <motion.div
+                key={currentWord.id}
+                custom={direction}
+                variants={cardVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                drag={prefersReducedMotion ? false : "x"}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.35}
+                dragMomentum={false}
+                onDrag={(_, info) => dragX.set(info.offset.x)}
+                onDragEnd={(_, info) => {
+                  const SWIPE_THRESHOLD = 80;
+                  const SWIPE_VELOCITY = 400;
+                  const dx = info.offset.x;
+                  const vx = info.velocity.x;
+                  // Always clear the drag value so the direction-glow overlays
+                  // and the rotate transform don't stay stuck if the swipe is
+                  // blocked at a boundary (handleNext/handlePrev no-op there).
+                  dragX.set(0);
+                  if (dx > SWIPE_THRESHOLD || vx > SWIPE_VELOCITY) {
+                    handleNext();
+                  } else if (dx < -SWIPE_THRESHOLD || vx < -SWIPE_VELOCITY) {
+                    handlePrev();
+                  }
+                }}
+                whileDrag={{ scale: 0.98 }}
+                style={{ rotate: cardRotate }}
+                className="touch-pan-y select-none will-change-transform"
+              >
+                <Flashcard
+                  id={currentWord.id}
+                  word={currentWord.english}
+                  pos={currentWord.pos}
+                  level={currentWord.level}
+                  isFlipped={isFlipped}
+                  onFlip={handleFlip}
+                  nextCardId={nextWord?.id}
+                  mode={studyMode}
+                  onReveal={handleRevealWord}
+                  onChallenge={handleChallengeMe}
+                  difficulty={getDifficulty(currentWord.id)}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
         ) : null}
 
         {currentWord ? (
@@ -533,6 +658,20 @@ export default function Home() {
             </div>
 
             <div className="w-full max-w-2xl mt-5 grid grid-cols-2 gap-3">
+              <div className="relative">
+                {/* Floating "+XP" pops anchored to the I-know-it button cell. */}
+                <div className="pointer-events-none absolute left-1/2 top-0 z-20">
+                  <AnimatePresence>
+                    {xpPops.map((p) => (
+                      <span
+                        key={p.id}
+                        className="xp-pop absolute left-1/2 top-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/40 shadow-[0_0_18px_-4px_rgba(16,185,129,0.7)]"
+                      >
+                        +{p.amount} XP
+                      </span>
+                    ))}
+                  </AnimatePresence>
+                </div>
               <button
                 onClick={() => handleMarkWithFlash("known")}
                 className={cn(
@@ -552,7 +691,39 @@ export default function Home() {
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(120%_60%_at_50%_120%,rgba(16,185,129,0.35),transparent_70%)]" />
               </button>
+              </div>
 
+              <div className="relative">
+                {/* Inline "Added to review" toast anchored to the new-word button cell. */}
+                <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2">
+                  <AnimatePresence>
+                    {reviewToasts.map((t) => (
+                      <motion.span
+                        key={t.id}
+                        initial={
+                          prefersReducedMotion
+                            ? { opacity: 0 }
+                            : { opacity: 0, y: 6, scale: 0.92 }
+                        }
+                        animate={
+                          prefersReducedMotion
+                            ? { opacity: 1 }
+                            : { opacity: 1, y: -22, scale: 1 }
+                        }
+                        exit={
+                          prefersReducedMotion
+                            ? { opacity: 0 }
+                            : { opacity: 0, y: -38, scale: 0.95 }
+                        }
+                        transition={{ duration: prefersReducedMotion ? 0.01 : 0.32, ease: "easeOut" }}
+                        className="absolute left-1/2 -translate-x-1/2 top-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-100 border border-amber-400/40 shadow-[0_0_18px_-4px_rgba(245,158,11,0.7)] whitespace-nowrap"
+                      >
+                        <Bookmark className="w-3 h-3" />
+                        Added to review
+                      </motion.span>
+                    ))}
+                  </AnimatePresence>
+                </div>
               <button
                 onClick={() => handleMarkWithFlash("learning")}
                 className={cn(
@@ -572,6 +743,7 @@ export default function Home() {
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(120%_60%_at_50%_120%,rgba(245,158,11,0.35),transparent_70%)]" />
               </button>
+              </div>
             </div>
           </>
         ) : null}
@@ -588,29 +760,72 @@ export default function Home() {
         </Button>
 
         <div className="flex items-center gap-4 sm:gap-8">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={handlePrev} 
-            disabled={currentIndex === 0 || displayWords.length === 0}
-            className="rounded-full w-12 h-12 bg-white/5 border-white/10 hover:bg-white/10 hover:text-white"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-          
-          <span className="text-sm font-medium text-muted-foreground w-20 text-center tracking-widest">
-            {displayWords.length > 0 ? `${currentIndex + 1} / ${displayWords.length}` : "0 / 0"}
-          </span>
+          {(() => {
+            const prevDisabled = currentIndex === 0 || displayWords.length === 0;
+            return (
+              <div className={cn(navShake === "prev" && "shake-x")}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handlePrev}
+                  aria-disabled={prevDisabled}
+                  aria-label="Previous card"
+                  className={cn(
+                    "rounded-full w-12 h-12 bg-white/5 border-white/10 hover:bg-white/10 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-transform",
+                    prevDisabled && "opacity-50 hover:translate-y-0 hover:bg-white/5",
+                  )}
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </Button>
+              </div>
+            );
+          })()}
 
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={handleNext}
-            disabled={currentIndex >= displayWords.length - 1 || displayWords.length === 0}
-            className="rounded-full w-12 h-12 bg-white/5 border-white/10 hover:bg-white/10 hover:text-white"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </Button>
+          <div className="text-sm font-medium text-muted-foreground w-20 text-center tracking-widest tabular-nums overflow-hidden h-5 relative">
+            <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+              <motion.span
+                key={counterText}
+                custom={direction}
+                initial={
+                  prefersReducedMotion
+                    ? { opacity: 0 }
+                    : { y: direction > 0 ? 14 : -14, opacity: 0 }
+                }
+                animate={prefersReducedMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+                exit={
+                  prefersReducedMotion
+                    ? { opacity: 0 }
+                    : { y: direction > 0 ? -14 : 14, opacity: 0 }
+                }
+                transition={{ duration: prefersReducedMotion ? 0.01 : 0.22, ease: "easeOut" }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                {displayWords.length > 0 ? counterText : "0 / 0"}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+
+          {(() => {
+            const nextDisabled =
+              currentIndex >= displayWords.length - 1 || displayWords.length === 0;
+            return (
+              <div className={cn(navShake === "next" && "shake-x")}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleNext}
+                  aria-disabled={nextDisabled}
+                  aria-label="Next card"
+                  className={cn(
+                    "rounded-full w-12 h-12 bg-white/5 border-white/10 hover:bg-white/10 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-transform",
+                    nextDisabled && "opacity-50 hover:translate-y-0 hover:bg-white/5",
+                  )}
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </Button>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="w-10"></div> {/* Spacer to balance the shuffle button */}

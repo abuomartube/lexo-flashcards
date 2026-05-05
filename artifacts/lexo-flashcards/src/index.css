@@ -117,10 +117,55 @@
 }
 
 .glass-card {
-  background: linear-gradient(145deg, rgba(30, 30, 46, 0.6) 0%, rgba(15, 15, 26, 0.4) 100%);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(145deg, rgba(30, 30, 46, 0.62) 0%, rgba(15, 15, 26, 0.42) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow:
+    0 10px 40px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Premium card: stronger glass, soft purple/blue glow border */
+.glass-card-premium {
+  position: relative;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(139, 92, 246, 0.10) 0%, rgba(139, 92, 246, 0) 60%),
+    radial-gradient(120% 80% at 100% 100%, rgba(59, 130, 246, 0.10) 0%, rgba(59, 130, 246, 0) 60%),
+    linear-gradient(145deg, rgba(30, 30, 46, 0.72) 0%, rgba(15, 15, 26, 0.55) 100%);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 20px 60px -10px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(139, 92, 246, 0.08),
+    0 0 40px -10px rgba(139, 92, 246, 0.25),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
+    inset 0 -20px 40px -20px rgba(0, 0, 0, 0.5);
+}
+
+/* Animated soft conic glow inside the card */
+.card-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    conic-gradient(from 0deg at 50% 50%,
+      rgba(139, 92, 246, 0.18) 0deg,
+      rgba(59, 130, 246, 0.15) 90deg,
+      rgba(139, 92, 246, 0.0) 180deg,
+      rgba(59, 130, 246, 0.12) 270deg,
+      rgba(139, 92, 246, 0.18) 360deg);
+  filter: blur(40px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: aurora-rotate 18s linear infinite;
+  z-index: 0;
+}
+.card-aurora > * { position: relative; z-index: 1; }
+
+@keyframes aurora-rotate {
+  to { transform: rotate(360deg); }
 }
 
 .text-gradient {
@@ -132,6 +177,93 @@
 
 .bg-gradient-brand {
   background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+}
+
+/* Cinematic word text with soft glow */
+.text-cinematic {
+  text-shadow:
+    0 0 30px rgba(139, 92, 246, 0.35),
+    0 0 60px rgba(59, 130, 246, 0.18);
+  letter-spacing: -0.02em;
+}
+
+/* App background: dark radial + soft floating blobs */
+.app-bg {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(139, 92, 246, 0.10) 0%, rgba(0, 0, 0, 0) 60%),
+    radial-gradient(60% 40% at 100% 100%, rgba(59, 130, 246, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
+    radial-gradient(60% 50% at 0% 100%, rgba(168, 85, 247, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
+    hsl(var(--background));
+}
+
+.app-bg::before,
+.app-bg::after {
+  content: "";
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.55;
+}
+.app-bg::before {
+  width: 520px; height: 520px;
+  top: -120px; left: -120px;
+  background: radial-gradient(circle at center, rgba(139, 92, 246, 0.55), rgba(139, 92, 246, 0));
+  animation: blob-float-a 18s ease-in-out infinite;
+}
+.app-bg::after {
+  width: 600px; height: 600px;
+  bottom: -160px; right: -160px;
+  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.45), rgba(59, 130, 246, 0));
+  animation: blob-float-b 22s ease-in-out infinite;
+}
+@keyframes blob-float-a {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(60px, 40px); }
+}
+@keyframes blob-float-b {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-80px, -50px); }
+}
+
+/* Tiny floating particles */
+.particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.35), transparent 50%),
+    radial-gradient(1px 1px at 78% 22%, rgba(255,255,255,0.25), transparent 50%),
+    radial-gradient(1px 1px at 33% 70%, rgba(255,255,255,0.30), transparent 50%),
+    radial-gradient(1px 1px at 60% 85%, rgba(255,255,255,0.22), transparent 50%),
+    radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.28), transparent 50%),
+    radial-gradient(1px 1px at 22% 50%, rgba(255,255,255,0.20), transparent 50%),
+    radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.30), transparent 50%);
+  background-size: 100% 100%;
+  animation: particle-drift 24s linear infinite;
+  opacity: 0.5;
+}
+@keyframes particle-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 -200px; }
+}
+
+/* Flash glow rings (success / warn) */
+.flash-success { animation: flash-emerald 700ms ease-out; }
+.flash-warn { animation: flash-amber 700ms ease-out; }
+@keyframes flash-emerald {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0); }
+  30% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.35), 0 0 60px 10px rgba(16, 185, 129, 0.25); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+@keyframes flash-amber {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.0); }
+  30% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.35), 0 0 60px 10px rgba(245, 158, 11, 0.25); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
 

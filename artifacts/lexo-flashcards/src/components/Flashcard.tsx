@@ -71,28 +71,34 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
   }, [nextCardId, queryClient]);
 
   return (
-    <div className="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/9] perspective-1000 cursor-pointer" onClick={onFlip}>
+    <motion.div
+      className="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/9] perspective-1000 cursor-pointer"
+      onClick={onFlip}
+      whileHover={{ scale: 1.015 }}
+      transition={{ type: "spring", stiffness: 320, damping: 22 }}
+    >
       <motion.div
         className="w-full h-full relative preserve-3d"
         animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        transition={{ type: "spring", stiffness: 220, damping: 24 }}
       >
         {/* Front */}
         <div className={cn(
-          "absolute inset-0 backface-hidden glass-card rounded-2xl flex flex-col items-center justify-center p-8 text-center group border border-white/5 transition-colors",
+          "absolute inset-0 backface-hidden glass-card-premium card-aurora overflow-hidden rounded-2xl flex flex-col items-center justify-center p-8 text-center group transition-all duration-300",
           accent.border,
         )}>
-          <span className={cn("absolute top-6 right-6 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md", accent.chip)}>{level}</span>
-          <Badge variant="secondary" className="absolute top-6 left-6 text-xs uppercase tracking-wider bg-white/5">{pos}</Badge>
-          <h2 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 text-foreground">{word}</h2>
-          <div className="mb-6">
+          <span className={cn("absolute top-6 right-6 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md backdrop-blur-sm", accent.chip)}>{level}</span>
+          <Badge variant="secondary" className="absolute top-6 left-6 text-xs uppercase tracking-wider bg-white/5 border border-white/10 backdrop-blur-sm">{pos}</Badge>
+          <h2 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 text-foreground text-cinematic">{word}</h2>
+          <div className="mb-6 flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">EN</span>
             {card?.audioWordUrl ? (
               <AudioButton url={card.audioWordUrl} size="default" />
             ) : (
               <AudioButton url="" size="default" />
             )}
           </div>
-          <div className="text-muted-foreground text-sm opacity-60 group-hover:opacity-100 transition-opacity absolute bottom-8">
+          <div className="text-muted-foreground text-xs sm:text-sm opacity-50 group-hover:opacity-90 transition-opacity absolute bottom-6 tracking-wide">
             Press Space or Tap to flip
           </div>
         </div>
@@ -100,7 +106,7 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
         {/* Back */}
         <div
           className={cn(
-            "absolute inset-0 backface-hidden glass-card rounded-2xl flex flex-col p-6 sm:p-10 border border-white/5 transition-colors",
+            "absolute inset-0 backface-hidden glass-card-premium overflow-hidden rounded-2xl flex flex-col p-6 sm:p-10 transition-all duration-300",
             accent.border,
           )}
           style={{ transform: "rotateY(180deg)" }}
@@ -122,8 +128,9 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
             <div className="flex flex-col h-full justify-between">
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{card.english}</h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-foreground text-cinematic">{card.english}</h2>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">EN</span>
                     {card.audioWordUrl && <AudioButton url={card.audioWordUrl} />}
                   </div>
                   <Badge variant="secondary" className="w-fit text-xs bg-white/5">{card.pos}</Badge>
@@ -146,6 +153,6 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
           ) : null}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

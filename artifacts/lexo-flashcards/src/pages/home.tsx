@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { useListLevels, useListWords } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
@@ -142,9 +143,29 @@ export default function Home() {
   );
 
   const currentStatus = currentWord ? getStatus(currentWord.id) : undefined;
+  const [flash, setFlash] = useState<null | "known" | "learning">(null);
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(null), 700);
+    return () => clearTimeout(t);
+  }, [flash]);
+  const handleMarkWithFlash = useCallback(
+    (status: StudyStatus) => {
+      setFlash(status);
+      handleMark(status);
+    },
+    [handleMark],
+  );
+
+  const progressPct =
+    displayWords.length > 0
+      ? ((currentIndex + 1) / displayWords.length) * 100
+      : 0;
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center pb-12 pt-6 px-4 max-w-5xl mx-auto w-full">
+    <div className="app-bg min-h-[100dvh] w-full">
+      <div className="particles" aria-hidden />
+      <div className="relative min-h-[100dvh] flex flex-col items-center pb-12 pt-6 px-4 max-w-5xl mx-auto w-full">
       <header className="w-full flex items-center justify-between mb-8 sm:mb-12">
         <div className="flex items-center gap-3">
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-md" />
@@ -360,45 +381,87 @@ export default function Home() {
             </div>
           </div>
         ) : currentWord ? (
-          <Flashcard
-            key={currentWord.id}
-            id={currentWord.id}
-            word={currentWord.english}
-            pos={currentWord.pos}
-            level={currentWord.level}
-            isFlipped={isFlipped}
-            onFlip={handleFlip}
-            nextCardId={nextWord?.id}
-          />
+          <div
+            className={cn(
+              "w-full max-w-2xl rounded-2xl transition-shadow",
+              flash === "known" && "flash-success",
+              flash === "learning" && "flash-warn",
+            )}
+          >
+            <Flashcard
+              key={currentWord.id}
+              id={currentWord.id}
+              word={currentWord.english}
+              pos={currentWord.pos}
+              level={currentWord.level}
+              isFlipped={isFlipped}
+              onFlip={handleFlip}
+              nextCardId={nextWord?.id}
+            />
+          </div>
         ) : null}
 
         {currentWord ? (
-          <div className="w-full max-w-2xl mt-6 grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              onClick={() => handleMark("known")}
-              className={cn(
-                "rounded-xl h-12 border-emerald-400/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 hover:border-emerald-400/40",
-                currentStatus === "known" &&
-                  "bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-transparent shadow-[0_0_20px_rgba(16,185,129,0.35)] hover:text-white",
-              )}
-            >
-              <Check className="w-4 h-4 mr-2" />
-              I know it
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleMark("learning")}
-              className={cn(
-                "rounded-xl h-12 border-amber-400/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:text-amber-200 hover:border-amber-400/40",
-                currentStatus === "learning" &&
-                  "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:text-white",
-              )}
-            >
-              <Bookmark className="w-4 h-4 mr-2" />
-              A new word
-            </Button>
-          </div>
+          <>
+            <div className="w-full max-w-2xl mt-5">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground/70 mb-1.5 px-1">
+                <span>Progress</span>
+                <span className="font-medium">
+                  {currentIndex + 1} / {displayWords.length}
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-blue-500 shadow-[0_0_12px_rgba(139,92,246,0.6)]"
+                  initial={false}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ type: "spring", stiffness: 120, damping: 24 }}
+                />
+              </div>
+            </div>
+
+            <div className="w-full max-w-2xl mt-5 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => handleMarkWithFlash("known")}
+                className={cn(
+                  "group relative rounded-xl h-12 px-4 text-sm font-medium overflow-hidden",
+                  "border border-emerald-400/25 bg-emerald-500/[0.06] text-emerald-200",
+                  "transition-all duration-300",
+                  "hover:-translate-y-0.5 hover:bg-emerald-500/15 hover:border-emerald-400/50",
+                  "hover:shadow-[0_8px_30px_-6px_rgba(16,185,129,0.45)]",
+                  "active:translate-y-0",
+                  currentStatus === "known" &&
+                    "bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-transparent shadow-[0_8px_30px_-6px_rgba(16,185,129,0.55)]",
+                )}
+              >
+                <span className="relative z-10 inline-flex items-center justify-center gap-2">
+                  <Check className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                  I know it
+                </span>
+                <span className="pointer-events-none absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(120%_60%_at_50%_120%,rgba(16,185,129,0.35),transparent_70%)]" />
+              </button>
+
+              <button
+                onClick={() => handleMarkWithFlash("learning")}
+                className={cn(
+                  "group relative rounded-xl h-12 px-4 text-sm font-medium overflow-hidden",
+                  "border border-amber-400/25 bg-amber-500/[0.06] text-amber-200",
+                  "transition-all duration-300",
+                  "hover:-translate-y-0.5 hover:bg-amber-500/15 hover:border-amber-400/50",
+                  "hover:shadow-[0_8px_30px_-6px_rgba(245,158,11,0.45)]",
+                  "active:translate-y-0",
+                  currentStatus === "learning" &&
+                    "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-[0_8px_30px_-6px_rgba(245,158,11,0.55)]",
+                )}
+              >
+                <span className="relative z-10 inline-flex items-center justify-center gap-2">
+                  <Bookmark className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                  A new word
+                </span>
+                <span className="pointer-events-none absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(120%_60%_at_50%_120%,rgba(245,158,11,0.35),transparent_70%)]" />
+              </button>
+            </div>
+          </>
         ) : null}
       </div>
 
@@ -439,6 +502,7 @@ export default function Home() {
         </div>
 
         <div className="w-10"></div> {/* Spacer to balance the shuffle button */}
+      </div>
       </div>
     </div>
   );

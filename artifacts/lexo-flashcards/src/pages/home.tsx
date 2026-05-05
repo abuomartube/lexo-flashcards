@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search } from "lucide-react";
 import { useListLevels, useListWords } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
@@ -157,6 +158,28 @@ export default function Home() {
     [handleMark],
   );
 
+  const [themeQuery, setThemeQuery] = useState("");
+  const filteredThemes = React.useMemo(() => {
+    const q = themeQuery.trim().toLowerCase();
+    if (!q) return THEMES;
+    return THEMES.filter((t) => t.label.toLowerCase().includes(q));
+  }, [themeQuery]);
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!themesOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setThemesOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [themesOpen]);
+
   const progressPct =
     displayWords.length > 0
       ? ((currentIndex + 1) / displayWords.length) * 100
@@ -241,83 +264,37 @@ export default function Home() {
           viewMode !== "browse" && "opacity-40 pointer-events-none",
         )}
       >
-        <div className="relative">
-          <button
-            onClick={() => setThemesOpen((v) => !v)}
-            className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
-              activeTheme
-                ? `${activeTheme.color.gradient} text-white ${activeTheme.color.glow}`
-                : themesOpen
-                  ? "bg-white/15 text-white"
-                  : "bg-white/5 hover:bg-white/10 text-muted-foreground",
-            )}
-          >
-            {activeTheme ? (
-              <>
-                <span className="text-base leading-none">{activeTheme.emoji}</span>
-                {activeTheme.label}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedTheme(null);
-                    setThemesOpen(false);
-                  }}
-                  className="ml-1 -mr-1 p-0.5 rounded-full hover:bg-black/20"
-                  aria-label="Clear theme"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </>
-            ) : (
-              <>
-                <Layers className="w-4 h-4" />
-                Word families
-              </>
-            )}
-          </button>
-
-          {themesOpen ? (
+        <button
+          onClick={() => setThemesOpen(true)}
+          className={cn(
+            "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
+            activeTheme
+              ? `${activeTheme.color.gradient} text-white ${activeTheme.color.glow}`
+              : "bg-white/5 hover:bg-white/10 text-muted-foreground",
+          )}
+        >
+          {activeTheme ? (
             <>
-              <div
-                className="fixed inset-0 z-30"
-                onClick={() => setThemesOpen(false)}
-              />
-              <div className="absolute z-40 left-1/2 -translate-x-1/2 mt-2 w-[min(94vw,40rem)] p-3 rounded-2xl glass-card border border-white/10 shadow-2xl">
-                <div className="flex items-center justify-between px-1 pb-2">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Word families · {THEMES.length} categories
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto pr-1">
-                  {THEMES.map((t) => {
-                    const active = selectedTheme === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        onClick={() => {
-                          setSelectedTheme(active ? null : t.id);
-                          setSelectedLevel("ALL");
-                          setThemesOpen(false);
-                        }}
-                        className={cn(
-                          "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5",
-                          active
-                            ? `${t.color.gradient} text-white ${t.color.glow}`
-                            : `bg-white/5 hover:bg-white/10 ${t.color.text}`,
-                        )}
-                      >
-                        <span className="text-sm leading-none">{t.emoji}</span>
-                        {t.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <span className="text-base leading-none">{activeTheme.emoji}</span>
+              {activeTheme.label}
             </>
-          ) : null}
-        </div>
+          ) : (
+            <>
+              <Layers className="w-4 h-4" />
+              Word families
+            </>
+          )}
+        </button>
+        {activeTheme ? (
+          <button
+            onClick={() => setSelectedTheme(null)}
+            className="px-3 py-2 rounded-full text-xs font-medium bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-white transition-all flex items-center gap-1.5"
+            aria-label="Clear family filter"
+          >
+            <X className="w-3.5 h-3.5" />
+            All Words
+          </button>
+        ) : null}
 
         <div className="w-px h-6 bg-white/10 mx-1" />
 
@@ -366,6 +343,29 @@ export default function Home() {
       </div>
 
       <div className="flex-1 w-full flex flex-col items-center justify-center">
+        {activeTheme && viewMode === "browse" ? (
+          <div className="w-full max-w-2xl mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Family
+              </span>
+              <span className={cn("inline-flex items-center gap-1.5 font-medium", activeTheme.color.text)}>
+                <span className="text-base leading-none">{activeTheme.emoji}</span>
+                {activeTheme.label}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                · {displayWords.length} {displayWords.length === 1 ? "word" : "words"}
+              </span>
+            </div>
+            <button
+              onClick={() => setSelectedTheme(null)}
+              className="text-xs text-muted-foreground hover:text-white transition-colors flex items-center gap-1"
+            >
+              <X className="w-3.5 h-3.5" />
+              Clear
+            </button>
+          </div>
+        ) : null}
         {isWordsLoading ? (
           <div className="w-full max-w-2xl aspect-[4/3] sm:aspect-[16/9] rounded-2xl glass-card animate-pulse flex items-center justify-center">
             <div className="text-muted-foreground">Loading vocabulary...</div>
@@ -504,6 +504,155 @@ export default function Home() {
         <div className="w-10"></div> {/* Spacer to balance the shuffle button */}
       </div>
       </div>
+
+      <AnimatePresence>
+        {themesOpen ? (
+          <motion.div
+            key="themes-modal"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Backdrop */}
+            <motion.button
+              type="button"
+              aria-label="Close"
+              onClick={() => setThemesOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+
+            {/* Modal panel */}
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Word families"
+              className={cn(
+                "relative w-full sm:w-[min(94vw,42rem)]",
+                "max-h-[60vh] sm:max-h-[60vh]",
+                "rounded-t-3xl sm:rounded-2xl",
+                "glass-card-premium overflow-hidden",
+                "shadow-[0_20px_80px_-10px_rgba(0,0,0,0.7),0_0_60px_-10px_rgba(139,92,246,0.35)]",
+                "flex flex-col",
+              )}
+              initial={{
+                y: window.innerWidth < 640 ? "100%" : 24,
+                opacity: 0,
+                scale: window.innerWidth < 640 ? 1 : 0.96,
+              }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{
+                y: window.innerWidth < 640 ? "100%" : 24,
+                opacity: 0,
+                scale: window.innerWidth < 640 ? 1 : 0.96,
+              }}
+              transition={{ type: "spring", stiffness: 280, damping: 28 }}
+            >
+              {/* Mobile drag handle */}
+              <div className="sm:hidden pt-2.5 pb-1 flex justify-center">
+                <div className="h-1 w-10 rounded-full bg-white/20" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between gap-3 px-5 pt-3 sm:pt-5 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <Layers className="w-4 h-4 text-violet-300" />
+                  <h2 className="text-sm font-semibold tracking-wide">Word families</h2>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {filteredThemes.length} / {THEMES.length}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setThemesOpen(false)}
+                  className="rounded-full p-1.5 hover:bg-white/10 transition-colors text-muted-foreground hover:text-white"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="px-5 pb-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="search"
+                    autoFocus
+                    value={themeQuery}
+                    onChange={(e) => setThemeQuery(e.target.value)}
+                    placeholder="Search family"
+                    className={cn(
+                      "w-full h-10 pl-9 pr-3 text-sm rounded-xl",
+                      "bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground",
+                      "focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400/40",
+                      "transition-all",
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Grid */}
+              <div className="flex-1 overflow-y-auto px-5 pb-5">
+                {filteredThemes.length === 0 ? (
+                  <div className="text-center text-sm text-muted-foreground py-10">
+                    No families match "{themeQuery}"
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {filteredThemes.map((t) => {
+                      const active = selectedTheme === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            setSelectedTheme(active ? null : t.id);
+                            setSelectedLevel("ALL");
+                            setThemesOpen(false);
+                            setThemeQuery("");
+                          }}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
+                            "border",
+                            active
+                              ? `${t.color.gradient} text-white ${t.color.glow} border-transparent scale-[1.02]`
+                              : `bg-white/[0.04] hover:bg-white/10 hover:-translate-y-0.5 ${t.color.text} border-white/10 hover:border-white/20`,
+                          )}
+                        >
+                          <span className="text-sm leading-none">{t.emoji}</span>
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              {activeTheme ? (
+                <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between bg-black/20">
+                  <span className="text-xs text-muted-foreground">
+                    Active: <span className={cn("font-medium", activeTheme.color.text)}>{activeTheme.emoji} {activeTheme.label}</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSelectedTheme(null);
+                      setThemesOpen(false);
+                    }}
+                    className="text-xs px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors flex items-center gap-1.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Clear family
+                  </button>
+                </div>
+              ) : null}
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

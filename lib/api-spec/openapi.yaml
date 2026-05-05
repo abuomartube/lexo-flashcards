@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: cards
+    description: Flashcard operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,70 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /levels:
+    get:
+      operationId: listLevels
+      tags: [cards]
+      summary: List CEFR levels with counts
+      responses:
+        "200":
+          description: Levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LevelSummary"
+  /words:
+    get:
+      operationId: listWords
+      tags: [cards]
+      summary: List words, optionally filtered by level
+      parameters:
+        - in: query
+          name: level
+          required: false
+          schema:
+            type: string
+            enum: [A1, A2, B1, B2, ALL]
+        - in: query
+          name: search
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Word list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WordListItem"
+  /cards/{id}:
+    get:
+      operationId: getCard
+      tags: [cards]
+      summary: Get a flashcard with full details (translation + sentence)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Card detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +99,61 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    LevelSummary:
+      type: object
+      properties:
+        level:
+          type: string
+        count:
+          type: integer
+      required: [level, count]
+    WordListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        english:
+          type: string
+        pos:
+          type: string
+        level:
+          type: string
+      required: [id, english, pos, level]
+    Card:
+      type: object
+      properties:
+        id:
+          type: integer
+        level:
+          type: string
+        english:
+          type: string
+        pos:
+          type: string
+        arabic:
+          type: string
+        sentenceEn:
+          type: string
+        sentenceAr:
+          type: string
+        audioWordUrl:
+          type: string
+        audioSentenceUrl:
+          type: string
+      required:
+        - id
+        - level
+        - english
+        - pos
+        - arabic
+        - sentenceEn
+        - sentenceAr
+        - audioWordUrl
+        - audioSentenceUrl

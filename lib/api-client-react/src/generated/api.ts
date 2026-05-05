@@ -13,7 +13,14 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  Card,
+  ErrorResponse,
+  HealthStatus,
+  LevelSummary,
+  ListWordsParams,
+  WordListItem,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
 import type { ErrorType } from "../custom-fetch";
@@ -92,6 +99,252 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List CEFR levels with counts
+ */
+export const getListLevelsUrl = () => {
+  return `/api/levels`;
+};
+
+export const listLevels = async (
+  options?: RequestInit,
+): Promise<LevelSummary[]> => {
+  return customFetch<LevelSummary[]>(getListLevelsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListLevelsQueryKey = () => {
+  return [`/api/levels`] as const;
+};
+
+export const getListLevelsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listLevels>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listLevels>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListLevelsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listLevels>>> = ({
+    signal,
+  }) => listLevels({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listLevels>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListLevelsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listLevels>>
+>;
+export type ListLevelsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List CEFR levels with counts
+ */
+
+export function useListLevels<
+  TData = Awaited<ReturnType<typeof listLevels>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listLevels>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListLevelsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List words, optionally filtered by level
+ */
+export const getListWordsUrl = (params?: ListWordsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/words?${stringifiedParams}`
+    : `/api/words`;
+};
+
+export const listWords = async (
+  params?: ListWordsParams,
+  options?: RequestInit,
+): Promise<WordListItem[]> => {
+  return customFetch<WordListItem[]>(getListWordsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListWordsQueryKey = (params?: ListWordsParams) => {
+  return [`/api/words`, ...(params ? [params] : [])] as const;
+};
+
+export const getListWordsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listWords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListWordsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listWords>>> = ({
+    signal,
+  }) => listWords(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listWords>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListWordsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listWords>>
+>;
+export type ListWordsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List words, optionally filtered by level
+ */
+
+export function useListWords<
+  TData = Awaited<ReturnType<typeof listWords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListWordsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a flashcard with full details (translation + sentence)
+ */
+export const getGetCardUrl = (id: number) => {
+  return `/api/cards/${id}`;
+};
+
+export const getCard = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Card> => {
+  return customFetch<Card>(getGetCardUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCardQueryKey = (id: number) => {
+  return [`/api/cards/${id}`] as const;
+};
+
+export const getGetCardQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCard>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getCard>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCardQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCard>>> = ({
+    signal,
+  }) => getCard(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCard>>, TError, TData> & {
+    queryKey: QueryKey;
+  };
+};
+
+export type GetCardQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCard>>
+>;
+export type GetCardQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get a flashcard with full details (translation + sentence)
+ */
+
+export function useGetCard<
+  TData = Awaited<ReturnType<typeof getCard>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getCard>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCardQueryOptions(id, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

@@ -8,3 +8,47 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface LevelSummary {
+  level: string;
+  count: number;
+}
+
+export interface WordListItem {
+  id: number;
+  english: string;
+  pos: string;
+  level: string;
+}
+
+export interface Card {
+  id: number;
+  level: string;
+  english: string;
+  pos: string;
+  arabic: string;
+  sentenceEn: string;
+  sentenceAr: string;
+  audioWordUrl: string;
+  audioSentenceUrl: string;
+}
+
+export type ListWordsParams = {
+  level?: ListWordsLevel;
+  search?: string;
+};
+
+export type ListWordsLevel =
+  (typeof ListWordsLevel)[keyof typeof ListWordsLevel];
+
+export const ListWordsLevel = {
+  A1: "A1",
+  A2: "A2",
+  B1: "B1",
+  B2: "B2",
+  ALL: "ALL",
+} as const;

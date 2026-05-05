@@ -14,3 +14,47 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List CEFR levels with counts
+ */
+export const ListLevelsResponseItem = zod.object({
+  level: zod.string(),
+  count: zod.number(),
+});
+export const ListLevelsResponse = zod.array(ListLevelsResponseItem);
+
+/**
+ * @summary List words, optionally filtered by level
+ */
+export const ListWordsQueryParams = zod.object({
+  level: zod.enum(["A1", "A2", "B1", "B2", "ALL"]).optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListWordsResponseItem = zod.object({
+  id: zod.number(),
+  english: zod.string(),
+  pos: zod.string(),
+  level: zod.string(),
+});
+export const ListWordsResponse = zod.array(ListWordsResponseItem);
+
+/**
+ * @summary Get a flashcard with full details (translation + sentence)
+ */
+export const GetCardParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetCardResponse = zod.object({
+  id: zod.number(),
+  level: zod.string(),
+  english: zod.string(),
+  pos: zod.string(),
+  arabic: zod.string(),
+  sentenceEn: zod.string(),
+  sentenceAr: zod.string(),
+  audioWordUrl: zod.string(),
+  audioSentenceUrl: zod.string(),
+});

@@ -7077,6 +7077,406 @@
     {
       "word": "zero",
       "pos": "number"
+    },
+    {
+      "word": "sofa",
+      "pos": "n."
+    },
+    {
+      "word": "armchair",
+      "pos": "n."
+    },
+    {
+      "word": "cushion",
+      "pos": "n."
+    },
+    {
+      "word": "blanket",
+      "pos": "n."
+    },
+    {
+      "word": "duvet",
+      "pos": "n."
+    },
+    {
+      "word": "pillow",
+      "pos": "n."
+    },
+    {
+      "word": "mattress",
+      "pos": "n."
+    },
+    {
+      "word": "wardrobe",
+      "pos": "n."
+    },
+    {
+      "word": "dresser",
+      "pos": "n."
+    },
+    {
+      "word": "bookshelf",
+      "pos": "n."
+    },
+    {
+      "word": "rug",
+      "pos": "n."
+    },
+    {
+      "word": "stool",
+      "pos": "n."
+    },
+    {
+      "word": "mop",
+      "pos": "n."
+    },
+    {
+      "word": "broom",
+      "pos": "n."
+    },
+    {
+      "word": "bucket",
+      "pos": "n."
+    },
+    {
+      "word": "kettle",
+      "pos": "n."
+    },
+    {
+      "word": "toaster",
+      "pos": "n."
+    },
+    {
+      "word": "mug",
+      "pos": "n."
+    },
+    {
+      "word": "lid",
+      "pos": "n."
+    },
+    {
+      "word": "dishwasher",
+      "pos": "n."
+    },
+    {
+      "word": "microwave",
+      "pos": "n."
+    },
+    {
+      "word": "stove",
+      "pos": "n."
+    },
+    {
+      "word": "toothbrush",
+      "pos": "n."
+    },
+    {
+      "word": "toothpaste",
+      "pos": "n."
+    },
+    {
+      "word": "razor",
+      "pos": "n."
+    },
+    {
+      "word": "shampoo",
+      "pos": "n."
+    },
+    {
+      "word": "dryer",
+      "pos": "n."
+    },
+    {
+      "word": "hanger",
+      "pos": "n."
+    },
+    {
+      "word": "drawer",
+      "pos": "n."
+    },
+    {
+      "word": "grill",
+      "pos": "v."
+    },
+    {
+      "word": "roast",
+      "pos": "v."
+    },
+    {
+      "word": "stew",
+      "pos": "n."
+    },
+    {
+      "word": "simmer",
+      "pos": "v."
+    },
+    {
+      "word": "chop",
+      "pos": "v."
+    },
+    {
+      "word": "mince",
+      "pos": "v."
+    },
+    {
+      "word": "baker",
+      "pos": "n."
+    },
+    {
+      "word": "pastry",
+      "pos": "n."
+    },
+    {
+      "word": "dessert",
+      "pos": "n."
+    },
+    {
+      "word": "pudding",
+      "pos": "n."
+    },
+    {
+      "word": "barbecue",
+      "pos": "n."
+    },
+    {
+      "word": "yogurt",
+      "pos": "n."
+    },
+    {
+      "word": "bacon",
+      "pos": "n."
+    },
+    {
+      "word": "lettuce",
+      "pos": "n."
+    },
+    {
+      "word": "garlic",
+      "pos": "n."
+    },
+    {
+      "word": "ginger",
+      "pos": "n."
+    },
+    {
+      "word": "herb",
+      "pos": "n."
+    },
+    {
+      "word": "mint",
+      "pos": "n."
+    },
+    {
+      "word": "olive",
+      "pos": "n."
+    },
+    {
+      "word": "vinegar",
+      "pos": "n."
+    },
+    {
+      "word": "saucepan",
+      "pos": "n."
+    },
+    {
+      "word": "blender",
+      "pos": "n."
+    },
+    {
+      "word": "grater",
+      "pos": "n."
+    },
+    {
+      "word": "peeler",
+      "pos": "n."
+    },
+    {
+      "word": "poach",
+      "pos": "v."
+    },
+    {
+      "word": "pasta",
+      "pos": "n."
+    },
+    {
+      "word": "noodle",
+      "pos": "n."
+    },
+    {
+      "word": "dumpling",
+      "pos": "n."
+    },
+    {
+      "word": "scarf",
+      "pos": "n."
+    },
+    {
+      "word": "jumper",
+      "pos": "n."
+    },
+    {
+      "word": "cardigan",
+      "pos": "n."
+    },
+    {
+      "word": "hoodie",
+      "pos": "n."
+    },
+    {
+      "word": "blouse",
+      "pos": "n."
+    },
+    {
+      "word": "blazer",
+      "pos": "n."
+    },
+    {
+      "word": "necklace",
+      "pos": "n."
+    },
+    {
+      "word": "bracelet",
+      "pos": "n."
+    },
+    {
+      "word": "earring",
+      "pos": "n."
+    },
+    {
+      "word": "handbag",
+      "pos": "n."
+    },
+    {
+      "word": "wallet",
+      "pos": "n."
+    },
+    {
+      "word": "purse",
+      "pos": "n."
+    },
+    {
+      "word": "denim",
+      "pos": "n."
+    },
+    {
+      "word": "linen",
+      "pos": "n."
+    },
+    {
+      "word": "suede",
+      "pos": "n."
+    },
+    {
+      "word": "velvet",
+      "pos": "n."
+    },
+    {
+      "word": "lace",
+      "pos": "n."
+    },
+    {
+      "word": "fabric",
+      "pos": "n."
+    },
+    {
+      "word": "outfit",
+      "pos": "n."
+    },
+    {
+      "word": "tailor",
+      "pos": "n."
+    },
+    {
+      "word": "striped",
+      "pos": "adj."
+    },
+    {
+      "word": "sleeve",
+      "pos": "n."
+    },
+    {
+      "word": "collar",
+      "pos": "n."
+    },
+    {
+      "word": "cuff",
+      "pos": "n."
+    },
+    {
+      "word": "sandal",
+      "pos": "n."
+    },
+    {
+      "word": "zip",
+      "pos": "v."
+    },
+    {
+      "word": "seam",
+      "pos": "n."
+    },
+    {
+      "word": "hem",
+      "pos": "n."
+    },
+    {
+      "word": "casual",
+      "pos": "adj."
+    },
+    {
+      "word": "jealous",
+      "pos": "adj."
+    },
+    {
+      "word": "envy",
+      "pos": "n."
+    },
+    {
+      "word": "embarrass",
+      "pos": "v."
+    },
+    {
+      "word": "sulky",
+      "pos": "adj."
+    },
+    {
+      "word": "gloomy",
+      "pos": "adj."
+    },
+    {
+      "word": "miserable",
+      "pos": "adj."
+    },
+    {
+      "word": "irritated",
+      "pos": "adj."
+    },
+    {
+      "word": "sociable",
+      "pos": "adj."
+    },
+    {
+      "word": "outgoing",
+      "pos": "adj."
+    },
+    {
+      "word": "moody",
+      "pos": "adj."
+    },
+    {
+      "word": "stubborn",
+      "pos": "adj."
+    },
+    {
+      "word": "caring",
+      "pos": "adj."
+    },
+    {
+      "word": "stressed",
+      "pos": "adj."
+    },
+    {
+      "word": "panic",
+      "pos": "n."
     }
   ],
   "B1": [
@@ -10149,10 +10549,6 @@
       "pos": "adj."
     },
     {
-      "word": "used",
-      "pos": "adj."
-    },
-    {
       "word": "valuable",
       "pos": "adj."
     },
@@ -10311,6 +10707,406 @@
     {
       "word": "youth",
       "pos": "n."
+    },
+    {
+      "word": "napkin",
+      "pos": "n."
+    },
+    {
+      "word": "spatula",
+      "pos": "n."
+    },
+    {
+      "word": "whisk",
+      "pos": "n."
+    },
+    {
+      "word": "jug",
+      "pos": "n."
+    },
+    {
+      "word": "jar",
+      "pos": "n."
+    },
+    {
+      "word": "tray",
+      "pos": "n."
+    },
+    {
+      "word": "socket",
+      "pos": "n."
+    },
+    {
+      "word": "charger",
+      "pos": "n."
+    },
+    {
+      "word": "pantry",
+      "pos": "n."
+    },
+    {
+      "word": "laundry",
+      "pos": "n."
+    },
+    {
+      "word": "detergent",
+      "pos": "n."
+    },
+    {
+      "word": "basin",
+      "pos": "n."
+    },
+    {
+      "word": "faucet",
+      "pos": "n."
+    },
+    {
+      "word": "plunger",
+      "pos": "n."
+    },
+    {
+      "word": "rack",
+      "pos": "n."
+    },
+    {
+      "word": "bathrobe",
+      "pos": "n."
+    },
+    {
+      "word": "comb",
+      "pos": "n."
+    },
+    {
+      "word": "sponge",
+      "pos": "n."
+    },
+    {
+      "word": "bleach",
+      "pos": "n."
+    },
+    {
+      "word": "heater",
+      "pos": "n."
+    },
+    {
+      "word": "teapot",
+      "pos": "n."
+    },
+    {
+      "word": "mixer",
+      "pos": "n."
+    },
+    {
+      "word": "utensil",
+      "pos": "n."
+    },
+    {
+      "word": "dustpan",
+      "pos": "n."
+    },
+    {
+      "word": "doormat",
+      "pos": "n."
+    },
+    {
+      "word": "colander",
+      "pos": "n."
+    },
+    {
+      "word": "rinse",
+      "pos": "v."
+    },
+    {
+      "word": "scrub",
+      "pos": "v."
+    },
+    {
+      "word": "apron",
+      "pos": "n."
+    },
+    {
+      "word": "portion",
+      "pos": "n."
+    },
+    {
+      "word": "garnish",
+      "pos": "v."
+    },
+    {
+      "word": "marinate",
+      "pos": "v."
+    },
+    {
+      "word": "marinade",
+      "pos": "n."
+    },
+    {
+      "word": "crust",
+      "pos": "n."
+    },
+    {
+      "word": "crumble",
+      "pos": "v."
+    },
+    {
+      "word": "starter",
+      "pos": "n."
+    },
+    {
+      "word": "tart",
+      "pos": "n."
+    },
+    {
+      "word": "fillet",
+      "pos": "n."
+    },
+    {
+      "word": "crumb",
+      "pos": "n."
+    },
+    {
+      "word": "vegetarian",
+      "pos": "n."
+    },
+    {
+      "word": "calorie",
+      "pos": "n."
+    },
+    {
+      "word": "buffet",
+      "pos": "n."
+    },
+    {
+      "word": "takeaway",
+      "pos": "n."
+    },
+    {
+      "word": "dine",
+      "pos": "v."
+    },
+    {
+      "word": "greasy",
+      "pos": "adj."
+    },
+    {
+      "word": "crunchy",
+      "pos": "adj."
+    },
+    {
+      "word": "sour",
+      "pos": "adj."
+    },
+    {
+      "word": "scoop",
+      "pos": "n."
+    },
+    {
+      "word": "sear",
+      "pos": "v."
+    },
+    {
+      "word": "stale",
+      "pos": "adj."
+    },
+    {
+      "word": "zest",
+      "pos": "n."
+    },
+    {
+      "word": "chopstick",
+      "pos": "n."
+    },
+    {
+      "word": "brew",
+      "pos": "v."
+    },
+    {
+      "word": "gravy",
+      "pos": "n."
+    },
+    {
+      "word": "nibble",
+      "pos": "v."
+    },
+    {
+      "word": "cork",
+      "pos": "n."
+    },
+    {
+      "word": "sneaker",
+      "pos": "n."
+    },
+    {
+      "word": "polyester",
+      "pos": "n."
+    },
+    {
+      "word": "nylon",
+      "pos": "n."
+    },
+    {
+      "word": "fleece",
+      "pos": "n."
+    },
+    {
+      "word": "buckle",
+      "pos": "n."
+    },
+    {
+      "word": "zipper",
+      "pos": "n."
+    },
+    {
+      "word": "hemline",
+      "pos": "n."
+    },
+    {
+      "word": "strap",
+      "pos": "n."
+    },
+    {
+      "word": "clasp",
+      "pos": "n."
+    },
+    {
+      "word": "lining",
+      "pos": "n."
+    },
+    {
+      "word": "floral",
+      "pos": "adj."
+    },
+    {
+      "word": "checked",
+      "pos": "adj."
+    },
+    {
+      "word": "vintage",
+      "pos": "adj."
+    },
+    {
+      "word": "accessory",
+      "pos": "n."
+    },
+    {
+      "word": "boutique",
+      "pos": "n."
+    },
+    {
+      "word": "alteration",
+      "pos": "n."
+    },
+    {
+      "word": "mannequin",
+      "pos": "n."
+    },
+    {
+      "word": "oversized",
+      "pos": "adj."
+    },
+    {
+      "word": "textile",
+      "pos": "n."
+    },
+    {
+      "word": "beanie",
+      "pos": "n."
+    },
+    {
+      "word": "pullover",
+      "pos": "n."
+    },
+    {
+      "word": "embroidery",
+      "pos": "n."
+    },
+    {
+      "word": "synthetic",
+      "pos": "adj."
+    },
+    {
+      "word": "patterned",
+      "pos": "adj."
+    },
+    {
+      "word": "seamstress",
+      "pos": "n."
+    },
+    {
+      "word": "brooch",
+      "pos": "n."
+    },
+    {
+      "word": "cufflink",
+      "pos": "n."
+    },
+    {
+      "word": "dye",
+      "pos": "v."
+    },
+    {
+      "word": "pleat",
+      "pos": "n."
+    },
+    {
+      "word": "affectionate",
+      "pos": "adj."
+    },
+    {
+      "word": "apologetic",
+      "pos": "adj."
+    },
+    {
+      "word": "curious",
+      "pos": "adj."
+    },
+    {
+      "word": "overwhelmed",
+      "pos": "adj."
+    },
+    {
+      "word": "resentful",
+      "pos": "adj."
+    },
+    {
+      "word": "hopeless",
+      "pos": "adj."
+    },
+    {
+      "word": "empathy",
+      "pos": "n."
+    },
+    {
+      "word": "optimistic",
+      "pos": "adj."
+    },
+    {
+      "word": "pessimistic",
+      "pos": "adj."
+    },
+    {
+      "word": "selfish",
+      "pos": "adj."
+    },
+    {
+      "word": "stingy",
+      "pos": "adj."
+    },
+    {
+      "word": "introvert",
+      "pos": "n."
+    },
+    {
+      "word": "extrovert",
+      "pos": "n."
+    },
+    {
+      "word": "reserved",
+      "pos": "adj."
+    },
+    {
+      "word": "forgiving",
+      "pos": "adj."
     }
   ],
   "B2": [

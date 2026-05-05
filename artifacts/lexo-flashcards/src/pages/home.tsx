@@ -263,11 +263,13 @@ export default function Home() {
                 className="fixed inset-0 z-30"
                 onClick={() => setThemesOpen(false)}
               />
-              <div className="absolute z-40 left-1/2 -translate-x-1/2 mt-2 w-[min(92vw,28rem)] p-3 rounded-2xl glass-card border border-white/10 shadow-2xl">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1 pb-2">
-                  Word families
+              <div className="absolute z-40 left-1/2 -translate-x-1/2 mt-2 w-[min(94vw,40rem)] p-3 rounded-2xl glass-card border border-white/10 shadow-2xl">
+                <div className="flex items-center justify-between px-1 pb-2">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Word families · {THEMES.length} categories
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto pr-1">
                   {THEMES.map((t) => {
                     const active = selectedTheme === t.id;
                     return (

@@ -3,7 +3,7 @@ import { useListLevels, useListWords } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Shuffle, Check, BookOpen, Bookmark } from "lucide-react";
+import { ChevronLeft, ChevronRight, Shuffle, Check, BookOpen, Bookmark, Layers, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStudyStatus, type StudyStatus } from "@/lib/studyStatus";
 import { THEMES, getThemeById, buildThemeWordSet } from "@/lib/themes";
@@ -47,6 +47,7 @@ const LEVEL_STYLES: Record<
 export default function Home() {
   const [selectedLevel, setSelectedLevel] = useState<string>("ALL");
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [themesOpen, setThemesOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"browse" | "known" | "learning">("browse");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -215,53 +216,94 @@ export default function Home() {
 
       <div
         className={cn(
-          "flex flex-wrap gap-2 justify-center mb-3 w-full transition-opacity",
+          "flex flex-wrap gap-2 justify-center items-center mb-10 w-full transition-opacity",
           viewMode !== "browse" && "opacity-40 pointer-events-none",
         )}
       >
-        <button
-          onClick={() => {
-            setSelectedTheme(null);
-            setSelectedLevel("ALL");
-          }}
+        <div className="relative">
+          <button
+            onClick={() => setThemesOpen((v) => !v)}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
+              activeTheme
+                ? `${activeTheme.color.gradient} text-white ${activeTheme.color.glow}`
+                : themesOpen
+                  ? "bg-white/15 text-white"
+                  : "bg-white/5 hover:bg-white/10 text-muted-foreground",
+            )}
+          >
+            {activeTheme ? (
+              <>
+                <span className="text-base leading-none">{activeTheme.emoji}</span>
+                {activeTheme.label}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedTheme(null);
+                    setThemesOpen(false);
+                  }}
+                  className="ml-1 -mr-1 p-0.5 rounded-full hover:bg-black/20"
+                  aria-label="Clear theme"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </>
+            ) : (
+              <>
+                <Layers className="w-4 h-4" />
+                Word families
+              </>
+            )}
+          </button>
+
+          {themesOpen ? (
+            <>
+              <div
+                className="fixed inset-0 z-30"
+                onClick={() => setThemesOpen(false)}
+              />
+              <div className="absolute z-40 left-1/2 -translate-x-1/2 mt-2 w-[min(92vw,28rem)] p-3 rounded-2xl glass-card border border-white/10 shadow-2xl">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1 pb-2">
+                  Word families
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {THEMES.map((t) => {
+                    const active = selectedTheme === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          setSelectedTheme(active ? null : t.id);
+                          setSelectedLevel("ALL");
+                          setThemesOpen(false);
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5",
+                          active
+                            ? `${t.color.gradient} text-white ${t.color.glow}`
+                            : `bg-white/5 hover:bg-white/10 ${t.color.text}`,
+                        )}
+                      >
+                        <span className="text-sm leading-none">{t.emoji}</span>
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+
+        <div className="w-px h-6 bg-white/10 mx-1" />
+
+        <div
           className={cn(
-            "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5",
-            !selectedTheme
-              ? "bg-white/10 text-white"
-              : "bg-white/5 hover:bg-white/10 text-muted-foreground",
+            "flex flex-wrap gap-2 justify-center transition-opacity",
+            selectedTheme && "opacity-40 pointer-events-none",
           )}
         >
-          All themes
-        </button>
-        {THEMES.map((t) => {
-          const active = selectedTheme === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => {
-                setSelectedTheme(active ? null : t.id);
-                setSelectedLevel("ALL");
-              }}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5",
-                active
-                  ? `${t.color.gradient} text-white ${t.color.glow}`
-                  : `bg-white/5 hover:bg-white/10 ${t.color.text}`,
-              )}
-            >
-              <span className="text-sm leading-none">{t.emoji}</span>
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        className={cn(
-          "flex flex-wrap gap-2 justify-center mb-10 w-full transition-opacity",
-          (viewMode !== "browse" || selectedTheme) && "opacity-40 pointer-events-none",
-        )}
-      >
         <button
           onClick={() => setSelectedLevel("ALL")}
           className={cn(
@@ -297,6 +339,7 @@ export default function Home() {
             </button>
           );
         })}
+        </div>
       </div>
 
       <div className="flex-1 w-full flex flex-col items-center justify-center">

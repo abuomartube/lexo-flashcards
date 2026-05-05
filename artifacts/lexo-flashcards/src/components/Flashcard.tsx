@@ -203,7 +203,14 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
                 "bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-violet-400/40",
                 "text-muted-foreground hover:text-white transition-all",
               )}
-              aria-label="Show hint"
+              aria-pressed={hintLevel > 0}
+              aria-label={
+                hintLevel === 0
+                  ? "Show hint"
+                  : hintLevel === 1
+                    ? `Hint: ${hintMask}. Show more letters.`
+                    : "Hide hint"
+              }
             >
               <Lightbulb className="w-3 h-3 transition-transform group-hover/hint:scale-110 text-amber-300/80" />
               {hintLevel === 0 ? "Hint" : hintLevel === 1 ? "More" : "Hide"}

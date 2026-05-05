@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEXO Flashcards Swipe</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0b0f1f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
+}
+
+/* Card */
+.flashcard {
+  width: 320px;
+  height: 200px;
+  background: linear-gradient(135deg, #1a1f3c, #0b0f1f);
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  font-weight: bold;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  transition: transform 0.3s ease, background 0.2s ease;
+  touch-action: pan-y;
+}
+
+/* Buttons */
+.controls {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #6c5cff;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #8a7bff;
+}
+</style>
+
+</head>
+<body>
+
+<div>
+  <div class="flashcard" id="card">
+    April
+  </div>
+
+  <div class="controls">
+    <button id="prev">Prev</button>
+    <button id="next">Next</button>
+  </div>
+</div>
+
+<script>
+// ===============================
+// LEXO Swipe System
+// ===============================
+
+const card = document.getElementById('card');
+
+let startX = 0;
+let currentX = 0;
+let isDragging = false;
+let threshold = 70;
+
+// Demo words
+let words = ["April", "Ability", "Future", "Growth"];
+let index = 0;
+
+// ===============================
+// Update Card
+// ===============================
+function updateCard() {
+  card.textContent = words[index];
+}
+
+// ===============================
+// Swipe Start
+// ===============================
+card.addEventListener('touchstart', (e) => {
+  startX = e.touches[0].clientX;
+  isDragging = true;
+});
+
+// ===============================
+// Swipe Move
+// ===============================
+card.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+
+  currentX = e.touches[0].clientX;
+  let diff = currentX - startX;
+
+  card.style.transform = `translateX(${diff}px)`;
+
+  // Glow feedback
+  if (diff > 0) {
+    card.style.background = 'rgba(0,255,150,0.1)';
+  } else {
+    card.style.background = 'rgba(255,80,80,0.1)';
+  }
+});
+
+// ===============================
+// Swipe End
+// ===============================
+card.addEventListener('touchend', () => {
+  if (!isDragging) return;
+
+  let diff = currentX - startX;
+
+  card.style.transition = 'transform 0.3s ease';
+  card.style.transform = 'translateX(0)';
+  card.style.background = '';
+
+  if (diff > threshold) {
+    nextCard();
+  } else if (diff < -threshold) {
+    prevCard();
+  }
+
+  isDragging = false;
+});
+
+// ===============================
+// Buttons
+// ===============================
+document.getElementById('next').addEventListener('click', nextCard);
+document.getElementById('prev').addEventListener('click', prevCard);
+
+// ===============================
+// Logic
+// ===============================
+function nextCard() {
+  index = (index + 1) % words.length;
+  updateCard();
+}
+
+function prevCard() {
+  index = (index - 1 + words.length) % words.length;
+  updateCard();
+}
+
+// Init
+updateCard();
+
+</script>
+
+</body>
+</html>

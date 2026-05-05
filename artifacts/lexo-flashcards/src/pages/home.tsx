@@ -473,12 +473,28 @@ export default function Home() {
             </div>
           </div>
         ) : currentWord ? (
-          <div
+          <motion.div
             className={cn(
-              "w-full max-w-2xl rounded-2xl transition-shadow",
+              "w-full max-w-2xl rounded-2xl transition-shadow touch-pan-y select-none",
               flash === "known" && "flash-success",
               flash === "learning" && "flash-warn",
             )}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.35}
+            dragMomentum={false}
+            onDragEnd={(_, info) => {
+              const SWIPE_THRESHOLD = 80;
+              const SWIPE_VELOCITY = 400;
+              const dx = info.offset.x;
+              const vx = info.velocity.x;
+              if (dx > SWIPE_THRESHOLD || vx > SWIPE_VELOCITY) {
+                handleNext();
+              } else if (dx < -SWIPE_THRESHOLD || vx < -SWIPE_VELOCITY) {
+                handlePrev();
+              }
+            }}
+            whileDrag={{ scale: 0.98 }}
           >
             <Flashcard
               key={currentWord.id}
@@ -494,7 +510,7 @@ export default function Home() {
               onChallenge={handleChallengeMe}
               difficulty={getDifficulty(currentWord.id)}
             />
-          </div>
+          </motion.div>
         ) : null}
 
         {currentWord ? (

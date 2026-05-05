@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, Eye } from "lucide-react";
+import type { Difficulty } from "@/lib/studyStats";
+import { sounds } from "@/lib/sounds";
 
 interface FlashcardProps {
   id: number;
@@ -16,6 +18,9 @@ interface FlashcardProps {
   isFlipped: boolean;
   onFlip: () => void;
   nextCardId?: number;
+  mode?: "learning" | "challenge";
+  onReveal?: () => void;
+  difficulty?: Difficulty;
 }
 
 const LEVEL_ACCENT: Record<
@@ -52,14 +57,24 @@ const LEVEL_ACCENT: Record<
   },
 };
 
-/**
- * Highlight the target word (and simple inflections) inside a sentence.
- * Splits on a case-insensitive word-boundary regex and wraps matches in a styled span.
- */
+const POS_LABEL: Record<string, string> = {
+  "n.": "noun",
+  "v.": "verb",
+  "adj.": "adjective",
+  "adv.": "adverb",
+  "prep.": "preposition",
+  "pron.": "pronoun",
+  "conj.": "conjunction",
+  "det.": "determiner",
+  "exclam.": "exclamation",
+  "modal v.": "modal verb",
+  "number": "number",
+  "ordinal number": "ordinal number",
+};
+
 function highlightWord(sentence: string, word: string, className: string) {
   if (!sentence || !word) return sentence;
   const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  // Match the word and common inflections (s, es, ed, ing, ly)
   const re = new RegExp(`\\b(${escaped}(?:s|es|ed|ing|ly)?)\\b`, "gi");
   const parts: Array<string | { match: string; key: number }> = [];
   let lastIndex = 0;
@@ -77,10 +92,7 @@ function highlightWord(sentence: string, word: string, className: string) {
     ) : (
       <span
         key={`m-${p.key}-${idx}`}
-        className={cn(
-          "px-1.5 py-0.5 rounded-md font-semibold",
-          className,
-        )}
+        className={cn("px-1.5 py-0.5 rounded-md font-semibold", className)}
       >
         {p.match}
       </span>
@@ -88,37 +100,56 @@ function highlightWord(sentence: string, word: string, className: string) {
   );
 }
 
-/** Mask a word into a hint pattern, revealing the first `revealCount` letters. */
-function buildHintMask(word: string, revealCount: number) {
-  const chars = word.split("");
-  return chars
-    .map((c, i) => {
-      if (!/[a-zA-Z]/.test(c)) return c;
-      return i < revealCount ? c : "_";
-    })
+/** Replace the target word inside a sentence with a blank pattern of the same length. */
+function blankWordInSentence(sentence: string, word: string) {
+  if (!sentence || !word) return sentence;
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`\\b(${escaped}(?:s|es|ed|ing|ly)?)\\b`, "gi");
+  return sentence.replace(re, (m) =>
+    m
+      .split("")
+      .map((c) => (/[a-zA-Z]/.test(c) ? "_" : c))
+      .join(""),
+  );
+}
+
+function buildBlanks(word: string) {
+  return word
+    .split("")
+    .map((c) => (/[a-zA-Z]/.test(c) ? "_" : c))
     .join(" ");
 }
 
-export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId }: FlashcardProps) {
+const DIFFICULTY_META: Record<Difficulty, { label: string; chip: string }> = {
+  easy: { label: "Easy", chip: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30" },
+  medium: { label: "Medium", chip: "bg-sky-500/15 text-sky-300 border-sky-400/30" },
+  hard: { label: "Hard", chip: "bg-rose-500/15 text-rose-300 border-rose-400/30" },
+};
+
+export function Flashcard({
+  id,
+  word,
+  pos,
+  level,
+  isFlipped,
+  onFlip,
+  nextCardId,
+  mode = "learning",
+  onReveal,
+  difficulty = "medium",
+}: FlashcardProps) {
   const accent = LEVEL_ACCENT[level] ?? LEVEL_ACCENT.A1;
   const queryClient = useQueryClient();
   const [hintLevel, setHintLevel] = React.useState(0);
 
-  // Reset hint when card changes
   React.useEffect(() => {
     setHintLevel(0);
-  }, [id]);
+  }, [id, mode]);
 
-  // Fetch the full card eagerly so the front-side audio button is available
-  // as soon as the card mounts. The back-side reuses the same cached data.
   const { data: card, isLoading, isError } = useGetCard(id, {
-    query: {
-      enabled: true,
-      queryKey: getGetCardQueryKey(id)
-    }
+    query: { enabled: true, queryKey: getGetCardQueryKey(id) },
   });
 
-  // Prefetch next card if available
   React.useEffect(() => {
     if (nextCardId) {
       queryClient.prefetchQuery({
@@ -128,12 +159,53 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
     }
   }, [nextCardId, queryClient]);
 
-  // Optional fields the API may add later
   const synonyms: string[] | undefined = (card as any)?.synonyms;
   const antonyms: string[] | undefined = (card as any)?.antonyms;
 
-  const hintLetters = Math.min(Math.ceil(word.length / 3) * (hintLevel || 0), word.length - 1);
-  const hintMask = buildHintMask(word, hintLetters);
+  const posLabel = POS_LABEL[pos.toLowerCase()] ?? pos;
+  const blanks = buildBlanks(word);
+  const diffMeta = DIFFICULTY_META[difficulty];
+
+  // 3-level hint content
+  const hintContent = React.useMemo(() => {
+    if (hintLevel === 0) return null;
+    if (hintLevel === 1) {
+      return (
+        <span>
+          <span className="text-white/85 font-mono tracking-widest">{blanks}</span>
+          <span className="ml-2 text-[10px] text-muted-foreground/80">
+            {word.length} letters · {posLabel}
+          </span>
+        </span>
+      );
+    }
+    if (hintLevel === 2) {
+      return (
+        <span className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-violet-300/80">
+            Meaning
+          </span>
+          <span
+            className={cn("font-arabic text-base", accent.arabic)}
+            dir="rtl"
+          >
+            {card?.arabic ?? "—"}
+          </span>
+        </span>
+      );
+    }
+    // hintLevel === 3
+    return (
+      <span className="flex flex-col items-center gap-1">
+        <span className="text-[10px] uppercase tracking-widest text-violet-300/80">
+          Used in a sentence
+        </span>
+        <span className="text-xs sm:text-sm text-white/85 italic">
+          {card?.sentenceEn ? blankWordInSentence(card.sentenceEn, word) : "—"}
+        </span>
+      </span>
+    );
+  }, [hintLevel, word, blanks, posLabel, accent.arabic, card?.arabic, card?.sentenceEn]);
 
   return (
     <motion.div
@@ -148,11 +220,26 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
         transition={{ type: "spring", stiffness: 220, damping: 24 }}
       >
         {/* Front */}
-        <div className={cn(
-          "absolute inset-0 backface-hidden glass-card-premium card-aurora overflow-hidden rounded-2xl flex flex-col items-center justify-center p-8 text-center group transition-all duration-300",
-          accent.border,
-        )}>
-          <span className={cn("absolute top-6 right-6 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md backdrop-blur-sm", accent.chip)}>{level}</span>
+        <div
+          className={cn(
+            "absolute inset-0 backface-hidden glass-card-premium card-aurora overflow-hidden rounded-2xl flex flex-col items-center justify-center p-6 sm:p-8 text-center group transition-all duration-300",
+            accent.border,
+          )}
+        >
+          <span
+            className={cn(
+              "absolute top-4 sm:top-6 right-4 sm:right-6 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md backdrop-blur-sm",
+              accent.chip,
+            )}
+          >
+            {level}
+          </span>
+
+          {mode === "challenge" ? (
+            <span className="absolute top-4 sm:top-6 left-4 sm:left-6 inline-flex items-center gap-1 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md bg-violet-500/15 text-violet-200 border border-violet-400/30">
+              Challenge
+            </span>
+          ) : null}
 
           <span className="mb-3 sm:mb-4 inline-flex items-center text-[10px] sm:text-xs uppercase tracking-[0.18em] font-semibold text-white/85 px-2.5 py-1 rounded-full bg-white/[0.06] backdrop-blur-sm border border-white/10 shadow-[0_0_18px_-4px_rgba(139,92,246,0.45)]">
             {pos}
@@ -160,43 +247,73 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
 
           <AnimatePresence mode="wait">
             <motion.h2
-              key={word}
+              key={`${word}-${mode}`}
               initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -8, filter: "blur(6px)" }}
               transition={{ duration: 0.35, ease: "easeOut" }}
               className={cn(
-                "font-bold tracking-tight mb-5 sm:mb-6 text-foreground text-cinematic break-words max-w-[90%] leading-tight",
-                word.length > 14
-                  ? "text-3xl sm:text-5xl"
-                  : word.length > 9
-                    ? "text-4xl sm:text-6xl"
-                    : "text-5xl sm:text-7xl",
+                "font-bold tracking-tight mb-4 sm:mb-5 text-foreground text-cinematic break-words max-w-[90%] leading-tight",
+                mode === "challenge"
+                  ? "font-mono tracking-[0.35em] text-4xl sm:text-6xl text-white/85"
+                  : word.length > 14
+                    ? "text-3xl sm:text-5xl"
+                    : word.length > 9
+                      ? "text-4xl sm:text-6xl"
+                      : "text-5xl sm:text-7xl",
               )}
             >
-              {word}
+              {mode === "challenge" ? blanks : word}
             </motion.h2>
           </AnimatePresence>
 
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">EN</span>
-            {card?.audioWordUrl ? (
-              <AudioButton url={card.audioWordUrl} size="default" />
-            ) : (
-              <AudioButton url="" size="default" />
-            )}
-          </div>
+          {mode === "learning" ? (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">
+                EN
+              </span>
+              {card?.audioWordUrl ? (
+                <AudioButton url={card.audioWordUrl} size="default" />
+              ) : (
+                <AudioButton url="" size="default" />
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                sounds.click();
+                onReveal?.();
+              }}
+              className={cn(
+                "mb-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold",
+                "bg-gradient-to-r from-violet-500 to-blue-500 text-white",
+                "shadow-[0_0_18px_-4px_rgba(124,58,237,0.6)]",
+                "hover:shadow-[0_0_28px_-4px_rgba(124,58,237,0.8)] hover:-translate-y-0.5",
+                "active:translate-y-0 transition-all",
+              )}
+              aria-label="Show the word and switch to Learning Mode"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Show Word
+            </button>
+          )}
 
-          {/* Hint */}
+          {/* Hint — only available in Challenge mode (Learning shows full word) */}
           <div
-            className="flex flex-col items-center gap-1.5"
+            className={cn(
+              "flex flex-col items-center gap-1.5 max-w-[92%]",
+              mode !== "challenge" && "hidden",
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setHintLevel((h) => (h >= 2 ? 0 : h + 1));
+                sounds.click();
+                setHintLevel((h) => (h >= 3 ? 0 : h + 1));
               }}
               className={cn(
                 "group/hint inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium",
@@ -207,15 +324,20 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
               aria-label={
                 hintLevel === 0
                   ? "Show hint"
-                  : hintLevel === 1
-                    ? `Hint: ${hintMask}. Show more letters.`
-                    : "Hide hint"
+                  : hintLevel === 3
+                    ? "Hide hint"
+                    : `Hint level ${hintLevel}. Show next hint.`
               }
             >
               <Lightbulb className="w-3 h-3 transition-transform group-hover/hint:scale-110 text-amber-300/80" />
-              {hintLevel === 0 ? "Hint" : hintLevel === 1 ? "More" : "Hide"}
+              {hintLevel === 0
+                ? "Hint"
+                : hintLevel < 3
+                  ? `Hint ${hintLevel}/3`
+                  : "Hide"}
             </button>
-            <AnimatePresence>
+
+            <AnimatePresence mode="wait">
               {hintLevel > 0 ? (
                 <motion.div
                   key={`hint-${hintLevel}`}
@@ -223,12 +345,9 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.2 }}
-                  className="text-xs text-muted-foreground tracking-widest font-mono"
+                  className="text-xs text-muted-foreground text-center"
                 >
-                  <span className="text-white/80">{hintMask}</span>
-                  <span className="ml-2 text-[10px] text-muted-foreground/70">
-                    {word.length} letters · {pos}
-                  </span>
+                  {hintContent}
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -242,11 +361,22 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
         {/* Back */}
         <div
           className={cn(
-            "absolute inset-0 backface-hidden glass-card-premium overflow-hidden rounded-2xl flex flex-col p-6 sm:p-8 transition-all duration-300",
+            "absolute inset-0 backface-hidden glass-card-premium overflow-hidden rounded-2xl flex flex-col p-5 sm:p-8 transition-all duration-300",
             accent.border,
           )}
           style={{ transform: "rotateY(180deg)" }}
         >
+          {/* Difficulty chip top-left */}
+          <span
+            className={cn(
+              "absolute top-4 sm:top-5 left-4 sm:left-5 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-md border backdrop-blur-sm",
+              diffMeta.chip,
+            )}
+            title={`Difficulty: ${diffMeta.label}`}
+          >
+            {diffMeta.label}
+          </span>
+
           {isLoading && !card ? (
             <div className="w-full h-full flex flex-col items-center justify-center space-y-6">
               <Skeleton className="h-12 w-48 bg-white/5" />
@@ -261,22 +391,32 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
               Failed to load card details.
             </div>
           ) : card ? (
-            <div className="flex flex-col h-full justify-between">
+            <div className="flex flex-col h-full justify-between pt-4 sm:pt-2">
               <div className="flex justify-between items-start gap-4">
                 <div className="flex flex-col gap-2 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h2 className="text-2xl sm:text-4xl font-bold text-foreground text-cinematic">{card.english}</h2>
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">EN</span>
+                    <h2 className="text-2xl sm:text-4xl font-bold text-foreground text-cinematic">
+                      {card.english}
+                    </h2>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">
+                      EN
+                    </span>
                     {card.audioWordUrl && <AudioButton url={card.audioWordUrl} />}
                   </div>
-                  <Badge variant="secondary" className="w-fit text-xs bg-white/5">{card.pos}</Badge>
+                  <Badge variant="secondary" className="w-fit text-xs bg-white/5">
+                    {card.pos}
+                  </Badge>
                 </div>
                 <div className="text-right">
-                  <h3 className={cn("text-2xl sm:text-4xl font-arabic font-bold", accent.arabic)} dir="rtl">{card.arabic}</h3>
+                  <h3
+                    className={cn("text-2xl sm:text-4xl font-arabic font-bold", accent.arabic)}
+                    dir="rtl"
+                  >
+                    {card.arabic}
+                  </h3>
                 </div>
               </div>
 
-              {/* Story Mode: example sentence with target word highlighted */}
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -288,7 +428,10 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
                 </div>
                 <div className="flex items-start gap-3 sm:gap-4">
                   {card.audioSentenceUrl && (
-                    <AudioButton url={card.audioSentenceUrl} className="mt-1 flex-shrink-0" />
+                    <AudioButton
+                      url={card.audioSentenceUrl}
+                      className="mt-1 flex-shrink-0"
+                    />
                   )}
                   <p className="text-base sm:text-xl text-foreground/90 leading-relaxed">
                     {highlightWord(card.sentenceEn, card.english, accent.highlight)}
@@ -303,7 +446,6 @@ export function Flashcard({ id, word, pos, level, isFlipped, onFlip, nextCardId 
                   </p>
                 </div>
 
-                {/* Synonyms / Antonyms (rendered only when API provides them) */}
                 {(synonyms?.length || antonyms?.length) ? (
                   <div className="mt-2 pt-3 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                     {synonyms?.length ? (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, GraduationCap, Brain } from "lucide-react";
 import { useListLevels, useListWords } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Shuffle, Check, BookOpen, Bookmark, Layers, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStudyStatus, type StudyStatus } from "@/lib/studyStatus";
+import { useStudyStats, type Achievement } from "@/lib/studyStats";
+import { sounds, isMuted, setMuted } from "@/lib/sounds";
+import { StatsHeader } from "@/components/StatsHeader";
+import { AchievementToast } from "@/components/AchievementToast";
 import { THEMES, getThemeById, buildThemeWordSet } from "@/lib/themes";
 
 const LEVEL_STYLES: Record<
@@ -54,8 +58,12 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
+  const [studyMode, setStudyMode] = useState<"learning" | "challenge">("learning");
+  const [muted, setMutedState] = useState<boolean>(() => isMuted());
+  const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
 
   const { statusMap, setStatus, getStatus, countByStatus } = useStudyStatus();
+  const { stats, recordMark, getDifficulty } = useStudyStats();
 
   const { data: levels } = useListLevels();
   const { data: words, isLoading: isWordsLoading } = useListWords({
@@ -105,8 +113,26 @@ export default function Home() {
   }, [currentIndex]);
 
   const handleFlip = useCallback(() => {
+    sounds.flip();
     setIsFlipped(prev => !prev);
   }, []);
+
+  const handleToggleMute = useCallback(() => {
+    setMutedState((prev) => {
+      const next = !prev;
+      setMuted(next);
+      return next;
+    });
+  }, []);
+
+  const handleRevealWord = useCallback(() => {
+    setStudyMode("learning");
+  }, []);
+
+  // Force card front whenever the study mode changes (Challenge must start hidden)
+  useEffect(() => {
+    setIsFlipped(false);
+  }, [studyMode]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -132,6 +158,23 @@ export default function Home() {
     (status: StudyStatus) => {
       if (!currentWord) return;
       setStatus(currentWord.id, status);
+      // Compute knownTotal AFTER this mark (statusMap not yet updated)
+      const wasKnown = statusMap[currentWord.id] === "known";
+      const isKnown = status === "known";
+      const knownTotalAfter = countByStatus("known") + (isKnown && !wasKnown ? 1 : !isKnown && wasKnown ? -1 : 0);
+      const granted = recordMark(currentWord.id, status, knownTotalAfter);
+      if (status === "known") sounds.success();
+      else sounds.warn();
+      if (granted.length) {
+        sounds.reward();
+        setAchievementQueue((q) => [...q, ...granted]);
+        granted.forEach((a) => {
+          setTimeout(
+            () => setAchievementQueue((q) => q.filter((x) => x !== a)),
+            3500,
+          );
+        });
+      }
       // Advance to next card after marking
       if (currentIndex < displayWords.length - 1) {
         setIsFlipped(false);
@@ -140,7 +183,7 @@ export default function Home() {
         setIsFlipped(false);
       }
     },
-    [currentWord, currentIndex, displayWords.length, setStatus],
+    [currentWord, currentIndex, displayWords.length, setStatus, statusMap, countByStatus, recordMark],
   );
 
   const currentStatus = currentWord ? getStatus(currentWord.id) : undefined;
@@ -189,14 +232,53 @@ export default function Home() {
     <div className="app-bg min-h-[100dvh] w-full">
       <div className="particles" aria-hidden />
       <div className="relative min-h-[100dvh] flex flex-col items-center pb-12 pt-6 px-4 max-w-5xl mx-auto w-full">
-      <header className="w-full flex items-center justify-between mb-8 sm:mb-12">
+      <header className="w-full flex items-center justify-between mb-6 sm:mb-10">
         <div className="flex items-center gap-3">
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-md" />
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
             LEXO <span className="text-gradient">Flashcards</span>
           </h1>
         </div>
+        <StatsHeader stats={stats} muted={muted} onToggleMute={handleToggleMute} />
       </header>
+
+      {/* Study mode toggle */}
+      <div className="flex items-center gap-1 mb-4 p-1 rounded-full bg-white/[0.04] border border-white/10">
+        <button
+          type="button"
+          onClick={() => {
+            sounds.click();
+            setStudyMode("learning");
+          }}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all",
+            studyMode === "learning"
+              ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white shadow-[0_0_18px_-4px_rgba(124,58,237,0.6)]"
+              : "text-muted-foreground hover:text-white",
+          )}
+          aria-pressed={studyMode === "learning"}
+        >
+          <GraduationCap className="w-3.5 h-3.5" />
+          Learning
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            sounds.click();
+            setStudyMode("challenge");
+          }}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all",
+            studyMode === "challenge"
+              ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-[0_0_18px_-4px_rgba(217,70,239,0.6)]"
+              : "text-muted-foreground hover:text-white",
+          )}
+          aria-pressed={studyMode === "challenge"}
+        >
+          <Brain className="w-3.5 h-3.5" />
+          Challenge
+        </button>
+      </div>
 
       <div className="flex flex-wrap gap-2 justify-center mb-4 w-full">
         <button
@@ -397,6 +479,9 @@ export default function Home() {
               isFlipped={isFlipped}
               onFlip={handleFlip}
               nextCardId={nextWord?.id}
+              mode={studyMode}
+              onReveal={handleRevealWord}
+              difficulty={getDifficulty(currentWord.id)}
             />
           </div>
         ) : null}
@@ -406,8 +491,8 @@ export default function Home() {
             <div className="w-full max-w-2xl mt-5">
               <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground/70 mb-1.5 px-1">
                 <span>Progress</span>
-                <span className="font-medium">
-                  {currentIndex + 1} / {displayWords.length}
+                <span className="font-medium tabular-nums">
+                  {Math.round(progressPct)}% · {currentIndex + 1} / {displayWords.length}
                 </span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
@@ -653,6 +738,8 @@ export default function Home() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <AchievementToast achievements={achievementQueue} />
     </div>
   );
 }

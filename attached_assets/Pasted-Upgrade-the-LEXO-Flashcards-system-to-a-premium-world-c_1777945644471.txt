@@ -1,0 +1,140 @@
+Upgrade the LEXO Flashcards system to a premium, world-class learning experience.
+
+Apply ALL the following improvements:
+
+━━━━━━━━━━━━━━━━━━━
+1. Learning Mode & Challenge Mode
+━━━━━━━━━━━━━━━━━━━
+- Add toggle:
+  Learning Mode (default)
+  Challenge Mode
+
+Learning Mode:
+- Show full word
+- Show pronunciation button
+- Show part of speech
+- No hints, no blanks
+
+Challenge Mode:
+- Hide the word completely
+- Show blanks instead: _ _ _ _ _
+- Enable hints system
+
+━━━━━━━━━━━━━━━━━━━
+2. Smart Hint System (3 levels)
+━━━━━━━━━━━━━━━━━━━
+Hint 1:
+- word length + part of speech
+
+Hint 2:
+- short meaning clue
+
+Hint 3:
+- example sentence (word hidden)
+
+Rules:
+- Never show full word in hint
+- Never reveal more than 1 letter
+
+━━━━━━━━━━━━━━━━━━━
+3. Progress System
+━━━━━━━━━━━━━━━━━━━
+- Track:
+  Known words
+  Learning words
+- Add progress bar
+- Show percentage completion
+
+━━━━━━━━━━━━━━━━━━━
+4. Streak System
+━━━━━━━━━━━━━━━━━━━
+- Daily streak counter
+- Reward consistency
+
+━━━━━━━━━━━━━━━━━━━
+5. Difficulty Adaptation
+━━━━━━━━━━━━━━━━━━━
+- Easy words appear less
+- Hard words repeat more
+
+━━━━━━━━━━━━━━━━━━━
+6. Smooth Animations
+━━━━━━━━━━━━━━━━━━━
+- Card flip animation (3D)
+- Button hover glow
+- Smooth transitions
+
+━━━━━━━━━━━━━━━━━━━
+7. Glow UI Design
+━━━━━━━━━━━━━━━━━━━
+- Add soft neon glow:
+  active buttons
+  selected levels
+  play button
+- Keep design clean (not over-glowing)
+
+━━━━━━━━━━━━━━━━━━━
+8. Sound Feedback
+━━━━━━━━━━━━━━━━━━━
+- Soft click sound on buttons
+- Flip sound on card flip
+
+━━━━━━━━━━━━━━━━━━━
+9. Gamification
+━━━━━━━━━━━━━━━━━━━
+- XP points
+- Levels
+- Small achievements:
+  “10 words mastered”
+  “3-day streak”
+
+━━━━━━━━━━━━━━━━━━━
+10. Word Type Badge Fix
+━━━━━━━━━━━━━━━━━━━
+- Show (n., v., adj.) above the word
+- Centered, clean, small badge
+- Never overlap with word
+
+━━━━━━━━━━━━━━━━━━━
+11. Smart Filters
+━━━━━━━━━━━━━━━━━━━
+- Keep:
+  A1 / A2 / B1 / B2 / C1
+- Smooth active highlight
+- Glow effect on selected
+
+━━━━━━━━━━━━━━━━━━━
+12. Word Families UX
+━━━━━━━━━━━━━━━━━━━
+- Do NOT replace main flashcard view
+- Open as overlay panel OR modal
+- Easy close button
+
+━━━━━━━━━━━━━━━━━━━
+13. “More” Button Upgrade
+━━━━━━━━━━━━━━━━━━━
+When clicked:
+- Show:
+  definition
+  Arabic meaning (optional)
+  example
+  synonyms
+
+━━━━━━━━━━━━━━━━━━━
+14. Reveal Word Button
+━━━━━━━━━━━━━━━━━━━
+- In Challenge Mode:
+  add "Show Word"
+- Returns to Learning Mode
+
+━━━━━━━━━━━━━━━━━━━
+15. Micro-interactions
+━━━━━━━━━━━━━━━━━━━
+- Hover effects
+- Tap feedback
+- Slight scale animation on buttons
+
+━━━━━━━━━━━━━━━━━━━
+Final Rule:
+Do NOT break existing functionality.
+Only enhance UX, UI, and learning flow.

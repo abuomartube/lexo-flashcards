@@ -18,10 +18,11 @@ interface FlashcardProps {
 export function Flashcard({ id, word, pos, isFlipped, onFlip, nextCardId }: FlashcardProps) {
   const queryClient = useQueryClient();
   
-  // We fetch the full card. enabled only when flipped or prefetching.
+  // Fetch the full card eagerly so the front-side audio button is available
+  // as soon as the card mounts. The back-side reuses the same cached data.
   const { data: card, isLoading, isError } = useGetCard(id, {
     query: {
-      enabled: isFlipped,
+      enabled: true,
       queryKey: getGetCardQueryKey(id)
     }
   });
@@ -47,6 +48,13 @@ export function Flashcard({ id, word, pos, isFlipped, onFlip, nextCardId }: Flas
         <div className="absolute inset-0 backface-hidden glass-card rounded-2xl flex flex-col items-center justify-center p-8 text-center group border border-white/5 hover:border-primary/30 transition-colors">
           <Badge variant="secondary" className="absolute top-6 left-6 text-xs uppercase tracking-wider bg-white/5">{pos}</Badge>
           <h2 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 text-foreground">{word}</h2>
+          <div className="mb-6">
+            {card?.audioWordUrl ? (
+              <AudioButton url={card.audioWordUrl} size="default" />
+            ) : (
+              <AudioButton url="" size="default" />
+            )}
+          </div>
           <div className="text-muted-foreground text-sm opacity-60 group-hover:opacity-100 transition-opacity absolute bottom-8">
             Press Space or Tap to flip
           </div>

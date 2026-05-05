@@ -6,8 +6,25 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.0",
+    "@workspace/api-client-react": "workspace:*",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "framer-motion": "catalog:",
+    "lucide-react": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
   "peerDependencies": {
+    "@tanstack/react-query": "catalog:",
     "react": ">=18",
     "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }

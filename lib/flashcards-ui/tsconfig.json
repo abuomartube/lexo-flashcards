@@ -7,7 +7,13 @@
     "outDir": "dist",
     "rootDir": "src",
     "lib": ["dom", "es2022"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["react"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../api-client-react"
+    }
+  ]
 }

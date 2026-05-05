@@ -1,0 +1,188 @@
+Upgrade the Flashcards experience with these 15 creative features.
+
+Important:
+- Do NOT break current flashcard data.
+- Do NOT remove current filters: levels + word families.
+- Keep current “I know it” and “A new word” logic.
+- Build features step by step.
+- Use premium dark EduLexo style: glassmorphism, purple/blue glow, smooth animations.
+
+------------------------------------
+1. Word Story Mode
+
+When the user flips the card, show:
+- example sentence using the word
+- Arabic translation if available
+- highlight the target word inside the sentence
+
+------------------------------------
+2. Smart Difficulty System
+
+Add difficulty label:
+Easy / Medium / Hard
+
+Logic:
+- if user marks word as “I know it” repeatedly → Easy
+- if user marks word as “A new word” repeatedly → Hard
+- default → Medium
+
+------------------------------------
+3. Swipe Gestures
+
+Mobile gestures:
+- swipe right = I know it
+- swipe left = A new word
+- swipe up = flip card
+
+Keep buttons too.
+
+------------------------------------
+4. Focus Mode
+
+Add button:
+Focus Mode
+
+When enabled:
+- hide filters and extra controls
+- show only card, audio, and action buttons
+- add calm dark background
+
+------------------------------------
+5. Test Mode
+
+Add mode switch:
+Study Mode / Test Mode
+
+Test Mode:
+- show meaning or sentence
+- user chooses correct word from 4 options
+- show instant feedback
+
+------------------------------------
+6. Smart Hint System
+
+Add Hint button.
+
+Hint can show:
+- first letter
+- simple synonym
+- emoji clue if available
+
+Do not reveal full answer immediately.
+
+------------------------------------
+7. Micro Rewards
+
+After every 5 known words:
+- show small XP animation
+- show glow effect
+- toast: “Great progress!”
+
+------------------------------------
+8. Weak Words Section
+
+Add section:
+Words to Review
+
+Show words user often marks as “A new word”.
+
+------------------------------------
+9. Spaced Repetition
+
+Create review logic:
+- New word appears again later
+- Review after 10 minutes
+- Review after 1 day
+- Review after 3 days
+
+If database is not ready, create local placeholder logic first.
+
+------------------------------------
+10. Speaking Check
+
+Add button:
+Say it
+
+When clicked:
+- allow user to record pronunciation
+- show placeholder feedback:
+  Good / Needs practice
+
+Do not connect AI yet unless existing speech system exists.
+
+------------------------------------
+11. Dynamic Background by Level
+
+Change subtle background accent based on level:
+- A1: green/blue calm
+- A2: cyan/blue
+- B1: gold/purple
+- B2: pink/purple
+- C1: royal purple/gold
+
+Keep it subtle.
+
+------------------------------------
+12. Combo System
+
+If user marks several words “I know it” in a row:
+- show Combo x2, x3, x5
+- reset combo if user marks “A new word”
+
+------------------------------------
+13. Why This Word?
+
+Add small button:
+Why this word?
+
+Show short note:
+- why the word is useful
+- where it is commonly used
+
+------------------------------------
+14. Synonyms + Antonyms
+
+On flipped card:
+- show synonyms if available
+- show antonyms if available
+- keep clean and compact
+
+------------------------------------
+15. Mini Animations
+
+Add:
+- word fade-in animation
+- card flip smooth animation
+- button hover glow
+- level chip active glow
+- success pulse when word is known
+- amber pulse when marked new
+
+------------------------------------
+
+Implementation order:
+
+Phase 1:
+- Word Story Mode
+- Hint
+- Synonyms/Antonyms
+- Mini animations
+
+Phase 2:
+- Swipe gestures
+- Focus Mode
+- Test Mode
+
+Phase 3:
+- Smart difficulty
+- Weak Words
+- Combo
+- Micro rewards
+
+Phase 4:
+- Spaced repetition
+- Speaking Check
+- Dynamic backgrounds
+
+Start with Phase 1 only.
+Do not implement all phases at once.

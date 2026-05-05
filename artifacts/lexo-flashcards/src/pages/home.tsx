@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Shuffle, Check, BookOpen, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStudyStatus, type StudyStatus } from "@/lib/studyStatus";
+import { THEMES, getThemeById, buildThemeWordSet } from "@/lib/themes";
 
 const LEVEL_STYLES: Record<
   string,
@@ -45,6 +46,7 @@ const LEVEL_STYLES: Record<
 
 export default function Home() {
   const [selectedLevel, setSelectedLevel] = useState<string>("ALL");
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"browse" | "known" | "learning">("browse");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -55,24 +57,29 @@ export default function Home() {
   const { data: levels } = useListLevels();
   const { data: words, isLoading: isWordsLoading } = useListWords({
     level:
-      viewMode !== "browse" || selectedLevel === "ALL"
+      viewMode !== "browse" || selectedTheme || selectedLevel === "ALL"
         ? undefined
         : (selectedLevel as any),
   });
+
+  const activeTheme = getThemeById(selectedTheme);
 
   const displayWords = React.useMemo(() => {
     if (!words) return [];
     let list = words;
     if (viewMode === "known") {
-      list = words.filter((w) => statusMap[w.id] === "known");
+      list = list.filter((w) => statusMap[w.id] === "known");
     } else if (viewMode === "learning") {
-      list = words.filter((w) => statusMap[w.id] === "learning");
+      list = list.filter((w) => statusMap[w.id] === "learning");
+    } else if (activeTheme) {
+      const set = buildThemeWordSet(activeTheme);
+      list = list.filter((w) => set.has(w.english.toLowerCase()));
     }
     if (isShuffled) {
       return [...list].sort(() => Math.random() - 0.5);
     }
     return list;
-  }, [words, isShuffled, viewMode, statusMap]);
+  }, [words, isShuffled, viewMode, statusMap, activeTheme]);
 
   const knownCount = countByStatus("known");
   const learningCount = countByStatus("learning");
@@ -116,7 +123,7 @@ export default function Home() {
   useEffect(() => {
     setCurrentIndex(0);
     setIsFlipped(false);
-  }, [selectedLevel, isShuffled, viewMode]);
+  }, [selectedLevel, isShuffled, viewMode, selectedTheme]);
 
   const handleMark = useCallback(
     (status: StudyStatus) => {
@@ -208,8 +215,51 @@ export default function Home() {
 
       <div
         className={cn(
-          "flex flex-wrap gap-2 justify-center mb-10 w-full transition-opacity",
+          "flex flex-wrap gap-2 justify-center mb-3 w-full transition-opacity",
           viewMode !== "browse" && "opacity-40 pointer-events-none",
+        )}
+      >
+        <button
+          onClick={() => {
+            setSelectedTheme(null);
+            setSelectedLevel("ALL");
+          }}
+          className={cn(
+            "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5",
+            !selectedTheme
+              ? "bg-white/10 text-white"
+              : "bg-white/5 hover:bg-white/10 text-muted-foreground",
+          )}
+        >
+          All themes
+        </button>
+        {THEMES.map((t) => {
+          const active = selectedTheme === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => {
+                setSelectedTheme(active ? null : t.id);
+                setSelectedLevel("ALL");
+              }}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5",
+                active
+                  ? `${t.color.gradient} text-white ${t.color.glow}`
+                  : `bg-white/5 hover:bg-white/10 ${t.color.text}`,
+              )}
+            >
+              <span className="text-sm leading-none">{t.emoji}</span>
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        className={cn(
+          "flex flex-wrap gap-2 justify-center mb-10 w-full transition-opacity",
+          (viewMode !== "browse" || selectedTheme) && "opacity-40 pointer-events-none",
         )}
       >
         <button

@@ -158,12 +158,24 @@ export function Flashcard({
   });
 
   React.useEffect(() => {
-    if (nextCardId) {
-      queryClient.prefetchQuery({
+    if (!nextCardId) return;
+    void queryClient
+      .prefetchQuery({
         queryKey: getGetCardQueryKey(nextCardId),
         queryFn: () => getCard(nextCardId),
+      })
+      .then(() => {
+        const next = queryClient.getQueryData(
+          getGetCardQueryKey(nextCardId),
+        ) as { audioWordUrl?: string; audioSentenceUrl?: string } | undefined;
+        // Warm the browser cache for the next card's audio so flipping is instant.
+        if (next?.audioWordUrl) {
+          void fetch(next.audioWordUrl, { cache: "force-cache" }).catch(() => {});
+        }
+        if (next?.audioSentenceUrl) {
+          void fetch(next.audioSentenceUrl, { cache: "force-cache" }).catch(() => {});
+        }
       });
-    }
   }, [nextCardId, queryClient]);
 
   const synonyms: string[] | undefined = (card as any)?.synonyms;

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { sql, eq, asc, and, ilike } from "drizzle-orm";
+import { sql, eq, asc, and, or, ilike } from "drizzle-orm";
 import { db, wordsTable } from "@workspace/db";
 import {
   ListLevelsResponse,
@@ -9,7 +9,7 @@ import {
   GetCardResponse,
 } from "@workspace/api-zod";
 import { ensureCard } from "../lib/cards";
-import { streamAudio } from "../lib/audio";
+import { streamAudio, ensureAudioForHash } from "../lib/audio";
 
 const router: IRouter = Router();
 
@@ -99,10 +99,47 @@ router.get("/audio/:hash.mp3", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid audio id" });
     return;
   }
-  const result = await streamAudio(rawHash);
+  let result = await streamAudio(rawHash);
   if (!result) {
-    res.status(404).json({ error: "Audio not found" });
-    return;
+    // MP3 not yet generated — look up which word/sentence this hash belongs
+    // to and synthesize it on demand.
+    const [row] = await db
+      .select({
+        english: wordsTable.english,
+        sentenceEn: wordsTable.sentenceEn,
+        audioWordPath: wordsTable.audioWordPath,
+        audioSentencePath: wordsTable.audioSentencePath,
+      })
+      .from(wordsTable)
+      .where(
+        or(
+          eq(wordsTable.audioWordPath, rawHash),
+          eq(wordsTable.audioSentencePath, rawHash),
+        ),
+      )
+      .limit(1);
+    if (!row) {
+      res.status(404).json({ error: "Audio not found" });
+      return;
+    }
+    const text =
+      row.audioWordPath === rawHash ? row.english : row.sentenceEn ?? "";
+    if (!text) {
+      res.status(404).json({ error: "Audio not found" });
+      return;
+    }
+    try {
+      await ensureAudioForHash("en", text, rawHash);
+    } catch (err) {
+      req.log.error({ err, hash: rawHash }, "Failed to synthesize audio");
+      res.status(500).json({ error: "Failed to synthesize audio" });
+      return;
+    }
+    result = await streamAudio(rawHash);
+    if (!result) {
+      res.status(500).json({ error: "Audio not available after generation" });
+      return;
+    }
   }
   res.setHeader("Content-Type", "audio/mpeg");
   res.setHeader("Content-Length", String(result.size));

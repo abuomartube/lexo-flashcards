@@ -35,7 +35,7 @@ const VOICES: Record<AudioLang, string> = {
   ar: "alloy",
 };
 
-function hashKey(lang: AudioLang, text: string): string {
+export function hashKey(lang: AudioLang, text: string): string {
   const h = crypto.createHash("sha256");
   h.update(`${lang}::${text}`);
   return h.digest("hex");
@@ -45,42 +45,75 @@ function audioObjectName(hash: string): string {
   return `${privateDir}/audio/${hash}.mp3`;
 }
 
+const inflightAudio = new Map<string, Promise<void>>();
+
+async function generateAudio(
+  lang: AudioLang,
+  text: string,
+  hash: string,
+): Promise<void> {
+  const objectName = audioObjectName(hash);
+  const file = objectStorageClient.bucket(bucketId!).file(objectName);
+  const instructions =
+    lang === "en"
+      ? "You are a text-to-speech engine. Speak the user's text exactly, in clear native English at a slightly slower pace suitable for vocabulary learners. Do not add words, comments, translations, or pronunciation notes."
+      : "أنت محرّك تحويل نص إلى كلام. انطق نص المستخدم حرفيًا بالعربية الفصحى الواضحة وبسرعة معتدلة مناسبة للمتعلمين. لا تضِف أي كلمات أو تعليقات أو ترجمات.";
+  const response = await openai.chat.completions.create({
+    model: "gpt-audio",
+    modalities: ["text", "audio"],
+    audio: { voice: VOICES[lang] as "alloy", format: "mp3" },
+    messages: [
+      { role: "system", content: instructions },
+      { role: "user", content: `Repeat verbatim: ${text}` },
+    ],
+  });
+  const audioData =
+    (response.choices[0]?.message as unknown as { audio?: { data?: string } })
+      ?.audio?.data ?? "";
+  if (!audioData) {
+    throw new Error("OpenAI returned no audio data");
+  }
+  const buffer = Buffer.from(audioData, "base64");
+  await file.save(buffer, {
+    contentType: "audio/mpeg",
+    metadata: { contentType: "audio/mpeg" },
+    resumable: false,
+  });
+}
+
+/**
+ * Compute the deterministic hash for (lang, text) and ensure the MP3 exists in
+ * object storage, generating it via OpenAI if missing. De-duplicates concurrent
+ * requests for the same hash.
+ */
 export async function ensureAudio(
   lang: AudioLang,
   text: string,
 ): Promise<string> {
   const hash = hashKey(lang, text);
+  await ensureAudioForHash(lang, text, hash);
+  return hash;
+}
+
+export async function ensureAudioForHash(
+  lang: AudioLang,
+  text: string,
+  hash: string,
+): Promise<void> {
   const objectName = audioObjectName(hash);
   const file = objectStorageClient.bucket(bucketId!).file(objectName);
   const [exists] = await file.exists();
-  if (!exists) {
-    const instructions =
-      lang === "en"
-        ? "You are a text-to-speech engine. Speak the user's text exactly, in clear native English at a slightly slower pace suitable for vocabulary learners. Do not add words, comments, translations, or pronunciation notes."
-        : "أنت محرّك تحويل نص إلى كلام. انطق نص المستخدم حرفيًا بالعربية الفصحى الواضحة وبسرعة معتدلة مناسبة للمتعلمين. لا تضِف أي كلمات أو تعليقات أو ترجمات.";
-    const response = await openai.chat.completions.create({
-      model: "gpt-audio",
-      modalities: ["text", "audio"],
-      audio: { voice: VOICES[lang] as "alloy", format: "mp3" },
-      messages: [
-        { role: "system", content: instructions },
-        { role: "user", content: `Repeat verbatim: ${text}` },
-      ],
-    });
-    const audioData =
-      (response.choices[0]?.message as unknown as { audio?: { data?: string } })
-        ?.audio?.data ?? "";
-    if (!audioData) {
-      throw new Error("OpenAI returned no audio data");
-    }
-    const buffer = Buffer.from(audioData, "base64");
-    await file.save(buffer, {
-      contentType: "audio/mpeg",
-      metadata: { contentType: "audio/mpeg" },
-      resumable: false,
-    });
+  if (exists) return;
+  const existing = inflightAudio.get(hash);
+  if (existing) {
+    await existing;
+    return;
   }
-  return hash;
+  const work = generateAudio(lang, text, hash).finally(() => {
+    inflightAudio.delete(hash);
+  });
+  inflightAudio.set(hash, work);
+  await work;
 }
 
 export async function streamAudio(

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db, wordsTable, type Word } from "@workspace/db";
 import { openai } from "./openai";
-import { ensureAudio } from "./audio";
+import { hashKey } from "./audio";
 
 type CardContent = {
   arabic: string;
@@ -77,10 +77,11 @@ export async function ensureCard(id: number): Promise<Word | null> {
       sentenceAr = c.sentenceAr;
     }
 
-    const [audioWordPath, audioSentencePath] = await Promise.all([
-      ensureAudio("en", existing.english),
-      ensureAudio("en", sentenceEn),
-    ]);
+    // Compute deterministic audio hashes synchronously. The actual MP3 is
+    // generated lazily on first /api/audio/:hash request, so the card response
+    // doesn't have to wait for two TTS round-trips.
+    const audioWordPath = hashKey("en", existing.english);
+    const audioSentencePath = hashKey("en", sentenceEn);
 
     const [updated] = await db
       .update(wordsTable)

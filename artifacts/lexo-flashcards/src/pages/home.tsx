@@ -3,8 +3,9 @@ import { useListLevels, useListWords } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Shuffle, Check, BookOpen, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStudyStatus, type StudyStatus } from "@/lib/studyStatus";
 
 const LEVEL_STYLES: Record<
   string,
@@ -44,22 +45,37 @@ const LEVEL_STYLES: Record<
 
 export default function Home() {
   const [selectedLevel, setSelectedLevel] = useState<string>("ALL");
+  const [viewMode, setViewMode] = useState<"browse" | "known" | "learning">("browse");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
 
+  const { statusMap, setStatus, getStatus, countByStatus } = useStudyStatus();
+
   const { data: levels } = useListLevels();
-  const { data: words, isLoading: isWordsLoading } = useListWords({ 
-    level: selectedLevel === "ALL" ? undefined : selectedLevel as any 
+  const { data: words, isLoading: isWordsLoading } = useListWords({
+    level:
+      viewMode !== "browse" || selectedLevel === "ALL"
+        ? undefined
+        : (selectedLevel as any),
   });
 
   const displayWords = React.useMemo(() => {
     if (!words) return [];
-    if (isShuffled) {
-      return [...words].sort(() => Math.random() - 0.5);
+    let list = words;
+    if (viewMode === "known") {
+      list = words.filter((w) => statusMap[w.id] === "known");
+    } else if (viewMode === "learning") {
+      list = words.filter((w) => statusMap[w.id] === "learning");
     }
-    return words;
-  }, [words, isShuffled]);
+    if (isShuffled) {
+      return [...list].sort(() => Math.random() - 0.5);
+    }
+    return list;
+  }, [words, isShuffled, viewMode, statusMap]);
+
+  const knownCount = countByStatus("known");
+  const learningCount = countByStatus("learning");
 
   const currentWord = displayWords[currentIndex];
   const nextWord = displayWords[currentIndex + 1];
@@ -100,7 +116,24 @@ export default function Home() {
   useEffect(() => {
     setCurrentIndex(0);
     setIsFlipped(false);
-  }, [selectedLevel, isShuffled]);
+  }, [selectedLevel, isShuffled, viewMode]);
+
+  const handleMark = useCallback(
+    (status: StudyStatus) => {
+      if (!currentWord) return;
+      setStatus(currentWord.id, status);
+      // Advance to next card after marking
+      if (currentIndex < displayWords.length - 1) {
+        setIsFlipped(false);
+        setTimeout(() => setCurrentIndex((p) => p + 1), 150);
+      } else {
+        setIsFlipped(false);
+      }
+    },
+    [currentWord, currentIndex, displayWords.length, setStatus],
+  );
+
+  const currentStatus = currentWord ? getStatus(currentWord.id) : undefined;
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center pb-12 pt-6 px-4 max-w-5xl mx-auto w-full">
@@ -113,7 +146,72 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-2 justify-center mb-10 w-full">
+      <div className="flex flex-wrap gap-2 justify-center mb-4 w-full">
+        <button
+          onClick={() => {
+            setViewMode("known");
+            setSelectedLevel("ALL");
+          }}
+          className={cn(
+            "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
+            viewMode === "known"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+              : "bg-white/5 hover:bg-white/10 text-emerald-300",
+          )}
+        >
+          <Check className="w-3.5 h-3.5" />
+          I know it
+          <Badge
+            variant="secondary"
+            className="px-1.5 py-0 text-[10px] bg-black/20 text-white/80"
+          >
+            {knownCount}
+          </Badge>
+        </button>
+        <button
+          onClick={() => {
+            setViewMode("learning");
+            setSelectedLevel("ALL");
+          }}
+          className={cn(
+            "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
+            viewMode === "learning"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.35)]"
+              : "bg-white/5 hover:bg-white/10 text-amber-300",
+          )}
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+          A new word
+          <Badge
+            variant="secondary"
+            className="px-1.5 py-0 text-[10px] bg-black/20 text-white/80"
+          >
+            {learningCount}
+          </Badge>
+        </button>
+        <button
+          onClick={() => {
+            setViewMode("browse");
+            setSelectedLevel("ALL");
+          }}
+          className={cn(
+            "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
+            viewMode === "browse"
+              ? "bg-white/10 text-white"
+              : "bg-white/5 hover:bg-white/10 text-muted-foreground",
+          )}
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          Browse all
+        </button>
+      </div>
+
+      <div
+        className={cn(
+          "flex flex-wrap gap-2 justify-center mb-10 w-full transition-opacity",
+          viewMode !== "browse" && "opacity-40 pointer-events-none",
+        )}
+      >
         <button
           onClick={() => setSelectedLevel("ALL")}
           className={cn(
@@ -158,7 +256,13 @@ export default function Home() {
           </div>
         ) : displayWords.length === 0 ? (
           <div className="w-full max-w-2xl aspect-[4/3] sm:aspect-[16/9] rounded-2xl glass-card flex items-center justify-center">
-            <div className="text-muted-foreground">No words found for this level.</div>
+            <div className="text-muted-foreground text-center px-6">
+              {viewMode === "known"
+                ? "You haven't marked any words as known yet. Tap \"I know it\" under a card to save it here."
+                : viewMode === "learning"
+                  ? "No saved words yet. Tap \"A new word\" under a card to add it to your study list."
+                  : "No words found for this level."}
+            </div>
           </div>
         ) : currentWord ? (
           <Flashcard
@@ -171,6 +275,35 @@ export default function Home() {
             onFlip={handleFlip}
             nextCardId={nextWord?.id}
           />
+        ) : null}
+
+        {currentWord ? (
+          <div className="w-full max-w-2xl mt-6 grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              onClick={() => handleMark("known")}
+              className={cn(
+                "rounded-xl h-12 border-emerald-400/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 hover:border-emerald-400/40",
+                currentStatus === "known" &&
+                  "bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-transparent shadow-[0_0_20px_rgba(16,185,129,0.35)] hover:text-white",
+              )}
+            >
+              <Check className="w-4 h-4 mr-2" />
+              I know it
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleMark("learning")}
+              className={cn(
+                "rounded-xl h-12 border-amber-400/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:text-amber-200 hover:border-amber-400/40",
+                currentStatus === "learning" &&
+                  "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:text-white",
+              )}
+            >
+              <Bookmark className="w-4 h-4 mr-2" />
+              A new word
+            </Button>
+          </div>
         ) : null}
       </div>
 

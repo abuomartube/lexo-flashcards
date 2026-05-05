@@ -48,6 +48,12 @@ const LEVEL_STYLES: Record<
     ring: "ring-rose-400/40",
     text: "text-rose-300",
   },
+  C1: {
+    gradient: "bg-gradient-to-r from-violet-600 to-amber-500",
+    glow: "shadow-[0_0_22px_rgba(168,85,247,0.45)]",
+    ring: "ring-violet-400/50",
+    text: "text-violet-200",
+  },
 };
 
 export default function Home() {

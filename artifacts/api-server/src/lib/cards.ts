@@ -15,9 +15,9 @@ async function generateCardContent(word: Word): Promise<CardContent> {
   const prompt = `You are helping an Arabic-speaking learner study English vocabulary at CEFR level ${word.level}.
 For the English word/phrase below, respond with strict JSON only (no prose, no markdown), with these exact fields:
 {
-  "arabic": "the most common, accurate Modern Standard Arabic translation of the word/phrase (no diacritics needed, can include 1-2 alternates separated by ' / ' if commonly used)",
-  "sentenceEn": "a single short, natural English example sentence using the word in context, appropriate for CEFR ${word.level}, max 12 words",
-  "sentenceAr": "a faithful, natural Arabic translation of sentenceEn in Modern Standard Arabic"
+  "arabic": "the most common, accurate Modern Standard Arabic translation of the word/phrase that fits the given part of speech. Use no diacritics. You may include 1 short alternate separated by ' / ' only when both are very commonly used. Keep it concise — 1 to 3 words maximum.",
+  "sentenceEn": "ONE short, simple, natural English example sentence using the word in context. STRICT LIMITS: 4 to 8 words, must end with a period, no commas, no semicolons, no compound clauses, no abbreviations. Use everyday vocabulary appropriate for CEFR ${word.level}.",
+  "sentenceAr": "a faithful, natural Modern Standard Arabic translation of sentenceEn. Keep it equally short (4 to 8 words). Translate the meaning, not word-for-word. Make sure it sounds natural to a native Arabic reader."
 }
 
 English word: ${word.english}

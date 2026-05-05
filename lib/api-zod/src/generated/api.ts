@@ -28,7 +28,7 @@ export const ListLevelsResponse = zod.array(ListLevelsResponseItem);
  * @summary List words, optionally filtered by level
  */
 export const ListWordsQueryParams = zod.object({
-  level: zod.enum(["A1", "A2", "B1", "B2", "ALL"]).optional(),
+  level: zod.enum(["A1", "A2", "B1", "B2", "C1", "ALL"]).optional(),
   search: zod.coerce.string().optional(),
 });
 

@@ -55,6 +55,13 @@ const LEVEL_ACCENT: Record<
     chip: "bg-rose-500/15 text-rose-300",
     highlight: "text-rose-300 bg-rose-500/10",
   },
+  C1: {
+    border: "hover:border-violet-400/40",
+    badge: "bg-violet-500/15 text-violet-200 border border-violet-400/30",
+    arabic: "text-violet-200",
+    chip: "bg-gradient-to-r from-violet-500/30 to-amber-500/30 text-violet-100 border border-violet-300/30",
+    highlight: "text-amber-200 bg-violet-500/15",
+  },
 };
 
 const POS_LABEL: Record<string, string> = {

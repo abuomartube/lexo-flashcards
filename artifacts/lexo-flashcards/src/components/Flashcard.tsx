@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { Lightbulb, Eye } from "lucide-react";
+import { Lightbulb, Eye, Brain } from "lucide-react";
 import type { Difficulty } from "@/lib/studyStats";
 import { sounds } from "@/lib/sounds";
 
@@ -20,6 +20,7 @@ interface FlashcardProps {
   nextCardId?: number;
   mode?: "learning" | "challenge";
   onReveal?: () => void;
+  onChallenge?: () => void;
   difficulty?: Difficulty;
 }
 
@@ -143,6 +144,7 @@ export function Flashcard({
   nextCardId,
   mode = "learning",
   onReveal,
+  onChallenge,
   difficulty = "medium",
 }: FlashcardProps) {
   const accent = LEVEL_ACCENT[level] ?? LEVEL_ACCENT.A1;
@@ -185,10 +187,25 @@ export function Flashcard({
   const blanks = buildBlanks(word);
   const diffMeta = DIFFICULTY_META[difficulty];
 
+  // For short words (≤4 letters), letter count is too revealing —
+  // skip straight to a meaning clue per spec.
+  const isShortWord = word.length <= 4;
+
   // 3-level hint content
   const hintContent = React.useMemo(() => {
     if (hintLevel === 0) return null;
     if (hintLevel === 1) {
+      if (isShortWord) {
+        // Short words: Hint 1 = part of speech only (no length reveal)
+        return (
+          <span className="text-white/85">
+            <span className="text-[10px] uppercase tracking-widest text-violet-300/80 mr-2">
+              Type
+            </span>
+            {posLabel}
+          </span>
+        );
+      }
       return (
         <span>
           <span className="text-white/85 font-mono tracking-widest">{blanks}</span>
@@ -224,7 +241,7 @@ export function Flashcard({
         </span>
       </span>
     );
-  }, [hintLevel, word, blanks, posLabel, accent.arabic, card?.arabic, card?.sentenceEn]);
+  }, [hintLevel, word, blanks, posLabel, isShortWord, accent.arabic, card?.arabic, card?.sentenceEn]);
 
   return (
     <motion.div
@@ -287,16 +304,39 @@ export function Flashcard({
           </AnimatePresence>
 
           {mode === "learning" ? (
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">
-                EN
-              </span>
-              {card?.audioWordUrl ? (
-                <AudioButton url={card.audioWordUrl} size="default" />
-              ) : (
-                <AudioButton url="" size="default" />
-              )}
-            </div>
+            <>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium select-none">
+                  EN
+                </span>
+                {card?.audioWordUrl ? (
+                  <AudioButton url={card.audioWordUrl} size="default" />
+                ) : (
+                  <AudioButton url="" size="default" />
+                )}
+              </div>
+              {onChallenge ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    sounds.click();
+                    onChallenge();
+                  }}
+                  className={cn(
+                    "mb-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold",
+                    "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white",
+                    "shadow-[0_0_18px_-4px_rgba(217,70,239,0.6)]",
+                    "hover:shadow-[0_0_28px_-4px_rgba(217,70,239,0.85)] hover:-translate-y-0.5",
+                    "active:translate-y-0 transition-all",
+                  )}
+                  aria-label="Hide the word and switch to Challenge Mode"
+                >
+                  <Brain className="w-3.5 h-3.5" />
+                  Challenge Me
+                </button>
+              ) : null}
+            </>
           ) : (
             <button
               type="button"

@@ -135,6 +135,10 @@ export default function Home() {
     setStudyMode("learning");
   }, []);
 
+  const handleChallengeMe = useCallback(() => {
+    setStudyMode("challenge");
+  }, []);
+
   // Force card front whenever the study mode changes (Challenge must start hidden)
   useEffect(() => {
     setIsFlipped(false);
@@ -487,6 +491,7 @@ export default function Home() {
               nextCardId={nextWord?.id}
               mode={studyMode}
               onReveal={handleRevealWord}
+              onChallenge={handleChallengeMe}
               difficulty={getDifficulty(currentWord.id)}
             />
           </div>

@@ -1,0 +1,128 @@
+Build the Flashcards Learning Flow based on this concept:
+
+The flashcard system must have two clear modes:
+
+1. Learning Mode
+2. Challenge Mode
+
+Goal:
+Show the word first, then allow the student to test memory by hiding the word.
+
+Do NOT break existing data, levels, word families, audio, or progress.
+
+------------------------------------
+1. Learning Mode
+------------------------------------
+
+Default mode.
+
+Show:
+- full word
+- part of speech badge
+- pronunciation/audio button
+- level badge
+- flip card option
+- “Challenge Me” button
+
+Do NOT show:
+- hint
+- blanks
+- answer input
+
+Purpose:
+Student learns and understands the word.
+
+------------------------------------
+2. Challenge Mode
+------------------------------------
+
+When student clicks:
+“Challenge Me”
+
+Then:
+- hide the full word completely
+- show blanks instead:
+  _ _ _ _ _
+- show hint system
+- show “Show Word” button
+- optionally show answer input
+
+Example:
+
+Word: ability
+
+Learning Mode:
+ability
+
+Challenge Mode:
+_ _ _ _ _ _ _
+Hint 1: 7 letters · noun
+Hint 2: a skill
+Hint 3: He has the _____ to speak well.
+
+------------------------------------
+3. Hint System
+------------------------------------
+
+Add progressive hints:
+
+Hint 1:
+- word length
+- part of speech
+
+Hint 2:
+- short meaning clue
+
+Hint 3:
+- example sentence with the word hidden
+
+Rules:
+- Never show the full word inside hints
+- Never show hints while the word is visible
+- Do not reveal multiple letters
+- For short words, prefer meaning clue instead of letters
+
+------------------------------------
+4. Show Word
+------------------------------------
+
+Add button:
+“Show Word”
+
+When clicked:
+- exit Challenge Mode
+- return to Learning Mode
+- show the full word again
+
+------------------------------------
+5. Progress / Rewards
+------------------------------------
+
+When student marks:
+“I know it”
+- add XP
+- increase known count
+- show small success animation
+
+When student marks:
+“A new word”
+- add word to review list
+- show amber learning animation
+
+------------------------------------
+6. UI / UX
+------------------------------------
+
+Keep EduLexo premium style:
+- dark background
+- glass card
+- purple/blue glow
+- smooth transition between modes
+- clean spacing
+- no clutter
+
+Important:
+The flashcard must never show the word and the hint/blanks at the same time.
+
+Final behavior:
+Student learns the word → clicks Challenge Me → word disappears → hints appear → student tries to remember → Show Word reveals it again.

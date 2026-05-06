@@ -20,6 +20,10 @@ Premium AI-powered flashcard app for Arabic-speaking learners studying the Oxfor
 - `GET /cards/:id` → full card `{id, level, english, pos, arabic, sentenceEn, sentenceAr, audioWordUrl, audioSentenceUrl}`. Generates + caches missing pieces on first hit.
 - `GET /audio/:hash.mp3` → cached audio, immutable cache headers.
 
+## Gotchas
+
+- The public dev URL (`*.pike.replit.dev`) hits Vite directly on the artifact's external port, bypassing the platform's path-based `/api` proxy that only exists on port 80. The lexo-flashcards `vite.config.ts` therefore needs a dev `server.proxy` entry forwarding `/api` → `http://localhost:8080`. Production is unaffected.
+
 ## Required env vars
 
 - `DATABASE_URL` (Postgres)
